@@ -46,7 +46,7 @@ TELEGRAM_TOKEN = os.environ['TELEGRAM_TOKEN']
 LANGUAGE,DESCRIPTION,MEDIA,LOCATION  = range(4)
 
 
-database_id = os.environ['DATABASE_ID']
+database_id = os.environ['NOTION_DATABASE']
 
 notion = Client(auth=os.environ['NOTION_API_KEY'])
 S3_FILE_PATH = '/data/dynamic'
