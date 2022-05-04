@@ -8,5 +8,5 @@ resources:
 namespace: telegram-dev
 images:
 - name: cr.yandex/crp5greagvr5ibj796uu/ecobot/telegram-bot
-  newTag: main.3be9a35f.15
+  newTag: main.db00e1cd.16
 
