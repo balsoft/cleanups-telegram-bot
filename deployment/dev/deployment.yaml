@@ -14,10 +14,18 @@ spec:
       labels:
         app: ecobot-telegram
     spec:
+      volumes:
+      - name: s3-volume
+        persistentVolumeClaim:
+          claimName: csi-s3-pvc-dev
+          readOnly: false
       containers:
       - image: cr.yandex/crp5greagvr5ibj796uu/ecobot/telegram-bot
         name: ecobot-telegram
         imagePullPolicy: Always
+        volumeMounts:
+        - mountPath: /data/dynamic
+          name: s3-volume
         env:
         - name: AWS_KEY
           valueFrom:

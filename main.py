@@ -46,12 +46,10 @@ TELEGRAM_TOKEN = os.environ['TELEGRAM_TOKEN']
 LANGUAGE,DESCRIPTION,MEDIA,LOCATION  = range(4)
 
 
-database_id = "891e964d7d7f4bd6873e8e452bd4568b"
-
-GPS_REGEXP = r'^([-+]?)([\d]{1,2})(((\.)(\d+)(,)))(\s*)(([-+]?)([\d]{1,3})((\.)(\d+))?)$'
-URL_REGEXP = r'(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})'
+database_id = os.environ['DATABASE_ID']
 
 notion = Client(auth=os.environ['NOTION_API_KEY'])
+S3_FILE_PATH = '/data/dynamic'
 
 session = boto3.session.Session()
 
@@ -233,10 +231,10 @@ def media(update: Update, context: CallbackContext) -> int:
         if update.message.photo:
             photo_file = update.message.photo[-1].get_file()
             random_suffix =  ''.join(random.choice(string.ascii_lowercase) for i in range(10)) 
-            photo_file_name = 'location_photo-%s-%s-%s.jpg' % (random_suffix,chat_date,user_id)
+            photo_file_name = '%s/location_photo-%s-%s-%s.jpg' % (S3_FILE_PATH,random_suffix,chat_date,user_id)
             photo_file.download(photo_file_name)
-            s3_client.upload_file(photo_file_name, BUCKET , photo_file_name)     
-            os.remove(photo_file_name)
+           # s3_client.upload_file(photo_file_name, BUCKET , photo_file_name)     
+           #os.remove(photo_file_name)
             image_url = s3_bucket_endpoint+'/'+BUCKET+'/'+photo_file_name
             context.user_data['notion_base_page']['children'].append({
                 "object": "block",
@@ -255,10 +253,10 @@ def media(update: Update, context: CallbackContext) -> int:
         if update.message.video:
             vide_file = update.message.video.get_file()
             random_suffix =  ''.join(random.choice(string.ascii_lowercase) for i in range(10)) 
-            video_file_name = 'user_video-%s-%s-%s.mp4' % (random_suffix,chat_date,user_id)
+            video_file_name = '%s/user_video-%s-%s-%s.mp4' % (S3_FILE_PATH,random_suffix,chat_date,user_id)
             vide_file.download(video_file_name)
-            s3_client.upload_file(video_file_name, BUCKET , video_file_name)     
-            os.remove(video_file_name)
+          #  s3_client.upload_file(video_file_name, BUCKET , video_file_name)     
+           # os.remove(video_file_name)
             video_url = s3_bucket_endpoint+'/'+BUCKET+'/'+video_file_name
             context.user_data['notion_base_page']['children'].append({
                 "object": "block",
@@ -350,10 +348,10 @@ def location(update: Update, context: CallbackContext) -> int:
         )
         photo_file = update.message.photo[-1].get_file()
         random_suffix =  ''.join(random.choice(string.ascii_lowercase) for i in range(10)) 
-        photo_file_name = 'location_photo-%s-%s-%s.jpg' % (random_suffix,chat_date,user_id)
+        photo_file_name = '%s/location_photo-%s-%s-%s.jpg' % (S3_FILE_PATH,random_suffix,chat_date,user_id)
         photo_file.download(photo_file_name)
-        s3_client.upload_file(photo_file_name, BUCKET , photo_file_name)     
-        os.remove(photo_file_name)
+        #s3_client.upload_file(photo_file_name, BUCKET , photo_file_name)     
+       # os.remove(photo_file_name)
         image_url = s3_bucket_endpoint+'/'+BUCKET+'/'+photo_file_name
         context.user_data['notion_base_page']['properties']['Location'] = {
                     "rich_text": [
