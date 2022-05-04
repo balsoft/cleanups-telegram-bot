@@ -49,7 +49,7 @@ LANGUAGE,DESCRIPTION,MEDIA,LOCATION  = range(4)
 database_id = os.environ['NOTION_DATABASE']
 
 notion = Client(auth=os.environ['NOTION_API_KEY'])
-S3_FILE_PATH = '/data/dynamic'
+S3_FILE_PREFIX = '/data/dynamic'
 
 session = boto3.session.Session()
 
@@ -232,8 +232,8 @@ def media(update: Update, context: CallbackContext) -> int:
         if update.message.photo:
             photo_file = update.message.photo[-1].get_file()
             random_suffix =  ''.join(random.choice(string.ascii_lowercase) for i in range(10)) 
-            photo_file_name = '%s/location_photo-%s-%s-%s.jpg' % (S3_FILE_PATH,random_suffix,chat_date,user_id)
-            photo_file.download(photo_file_name)
+            photo_file_name = 'user_photo-%s-%s-%s.jpg' % (random_suffix,chat_date,user_id)
+            photo_file.download(S3_FILE_PREFIX+'/'+ photo_file_name)
            # s3_client.upload_file(photo_file_name, BUCKET , photo_file_name)     
            #os.remove(photo_file_name)
             image_url = s3_bucket_endpoint+'/'+BUCKET+'/' + PVC_NAME +'/' + photo_file_name
@@ -254,11 +254,11 @@ def media(update: Update, context: CallbackContext) -> int:
         if update.message.video:
             vide_file = update.message.video.get_file()
             random_suffix =  ''.join(random.choice(string.ascii_lowercase) for i in range(10)) 
-            video_file_name = '%s/user_video-%s-%s-%s.mp4' % (S3_FILE_PATH,random_suffix,chat_date,user_id)
-            vide_file.download(video_file_name)
+            video_file_name = 'user_video-%s-%s-%s.mp4' % (random_suffix,chat_date,user_id)
+            vide_file.download(S3_FILE_PREFIX+'/' + video_file_name)
           #  s3_client.upload_file(video_file_name, BUCKET , video_file_name)     
            # os.remove(video_file_name)
-            video_url = s3_bucket_endpoint+'/'+BUCKET+ PVC_NAME +'/' + video_file_name
+            video_url = s3_bucket_endpoint+'/'+BUCKET+ '/' + PVC_NAME +'/' + video_file_name
             context.user_data['notion_base_page']['children'].append({
                 "object": "block",
                     "type": "video",
@@ -349,8 +349,8 @@ def location(update: Update, context: CallbackContext) -> int:
         )
         photo_file = update.message.photo[-1].get_file()
         random_suffix =  ''.join(random.choice(string.ascii_lowercase) for i in range(10)) 
-        photo_file_name = '%s/location_photo-%s-%s-%s.jpg' % (S3_FILE_PATH,random_suffix,chat_date,user_id)
-        photo_file.download(photo_file_name)
+        photo_file_name = 'location_photo-%s-%s-%s.jpg' % (random_suffix,chat_date,user_id)
+        photo_file.download(S3_FILE_PREFIX+ '/' +photo_file_name)
         #s3_client.upload_file(photo_file_name, BUCKET , photo_file_name)     
        # os.remove(photo_file_name)
         image_url = s3_bucket_endpoint+'/'+BUCKET+'/' + PVC_NAME +'/' + photo_file_name
