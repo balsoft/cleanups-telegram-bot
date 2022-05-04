@@ -9,4 +9,4 @@ spec:
   resources:
     requests:
       storage: 50Gi
-  storageClassName: csi-s3-dev
+  storageClassName: s3-csi-dev
