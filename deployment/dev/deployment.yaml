@@ -15,7 +15,7 @@ spec:
         app: ecobot-telegram
     spec:
       containers:
-      - image: nginx
+      - image: cr.yandex/crp5greagvr5ibj796uu/ecobot/telegram-bot
         name: ecobot-telegram
         imagePullPolicy: Always
         env:
