@@ -63,4 +63,7 @@ spec:
               name: bot-secrets
               key: TELEGRAM_TOKEN
               optional: false # same as default; "mysecret" must exist
+        - name: PVC_NAME
+          value: "pvc-cd670fa6-059a-4828-82f4-50c35f380d2d"
+        
         

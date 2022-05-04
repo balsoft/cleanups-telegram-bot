@@ -54,6 +54,7 @@ S3_FILE_PATH = '/data/dynamic'
 session = boto3.session.Session()
 
 BUCKET=os.environ['S3_BUCKET']
+PVC_NAME=os.environ['PVC_NAME']
 s3_bucket_endpoint = 'https://storage.yandexcloud.net'
 s3_client = session.client(
     service_name='s3',
@@ -235,7 +236,7 @@ def media(update: Update, context: CallbackContext) -> int:
             photo_file.download(photo_file_name)
            # s3_client.upload_file(photo_file_name, BUCKET , photo_file_name)     
            #os.remove(photo_file_name)
-            image_url = s3_bucket_endpoint+'/'+BUCKET+'/'+photo_file_name
+            image_url = s3_bucket_endpoint+'/'+BUCKET+'/' + PVC_NAME +'/' + photo_file_name
             context.user_data['notion_base_page']['children'].append({
                 "object": "block",
                     "type": "image",
@@ -257,7 +258,7 @@ def media(update: Update, context: CallbackContext) -> int:
             vide_file.download(video_file_name)
           #  s3_client.upload_file(video_file_name, BUCKET , video_file_name)     
            # os.remove(video_file_name)
-            video_url = s3_bucket_endpoint+'/'+BUCKET+'/'+video_file_name
+            video_url = s3_bucket_endpoint+'/'+BUCKET+ PVC_NAME +'/' + video_file_name
             context.user_data['notion_base_page']['children'].append({
                 "object": "block",
                     "type": "video",
@@ -352,7 +353,7 @@ def location(update: Update, context: CallbackContext) -> int:
         photo_file.download(photo_file_name)
         #s3_client.upload_file(photo_file_name, BUCKET , photo_file_name)     
        # os.remove(photo_file_name)
-        image_url = s3_bucket_endpoint+'/'+BUCKET+'/'+photo_file_name
+        image_url = s3_bucket_endpoint+'/'+BUCKET+'/' + PVC_NAME +'/' + photo_file_name
         context.user_data['notion_base_page']['properties']['Location'] = {
                     "rich_text": [
                         {
