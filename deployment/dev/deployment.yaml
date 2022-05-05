@@ -25,6 +25,9 @@ spec:
         persistentVolumeClaim:
           claimName: csi-s3-pvc-dev
           readOnly: false
+      - name: tmpfs-volume
+        emptyDir:
+          medium: Memory
       containers:
       - image: cr.yandex/crp5greagvr5ibj796uu/ecobot/telegram-bot
         name: ecobot-telegram
@@ -32,6 +35,8 @@ spec:
         volumeMounts:
         - mountPath: /data/dynamic
           name: s3-volume
+        - mountPath: /data/tmpfs
+          name: tmpfs-volume
         env:
         - name: AWS_KEY
           valueFrom:

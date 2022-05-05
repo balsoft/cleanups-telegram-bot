@@ -19,6 +19,7 @@ import random
 import string
 import yaml
 import re
+import shutil
 
 from notion_client import Client
 
@@ -51,6 +52,7 @@ database_id = os.environ['NOTION_DATABASE']
 notion = Client(auth=os.environ['NOTION_API_KEY'])
 S3_FILE_PREFIX = '/data/dynamic'
 
+
 session = boto3.session.Session()
 
 BUCKET=os.environ['S3_BUCKET']
@@ -62,9 +64,11 @@ s3_client = session.client(
     aws_secret_access_key=os.environ['AWS_KEY'],
     endpoint_url=s3_bucket_endpoint,
 )
+PHRASES_FILE_PREFIX = '/data/tmpfs'
+PHRASES_FILE = 'phrases.yaml'
 
 def read_phrase_in_a_language(phrase,language):
-    with open(r'phrases.yaml') as file:
+    with open(r'%s/%s' %(PHRASES_FILE_PREFIX,PHRASES_FILE)) as file:
     # The FullLoader parameter handles the conversion from YAML
     # scalar values to Python the dictionary format
         phrase_dict = yaml.load(file, Loader=yaml.FullLoader)
@@ -455,7 +459,7 @@ def main() -> None:
     """Run the bot."""
     # Create the Updater and pass it your bot's token.
     updater = Updater(token=TELEGRAM_TOKEN, use_context=True)
-
+    shutil.copyfile(r'%s' % (PHRASES_FILE),r'%s/%s' %(PHRASES_FILE_PREFIX,PHRASES_FILE))
 
     # Get the dispatcher to register handlers
     dispatcher = updater.dispatcher
