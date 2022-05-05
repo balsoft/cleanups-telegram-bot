@@ -282,7 +282,7 @@ def location(update: Update, context: CallbackContext) -> int:
     """Stores the location and asks for some info about the user."""
     user = update.message.from_user
     gps_regex = r'^([-+]?)([\d]{1,2})(((\.)(\d+)(,)))(\s*)(([-+]?)([\d]{1,3})((\.)(\d+))?)$'
-    google_regex = r'https://goo.gl/maps/.*'
+    google_regex = r'https://.*goo.gl/.*'
     yandex_regex = r'https://yandex.ru/maps/.*'
 
     if update.message.location:
