@@ -6,6 +6,7 @@ metadata:
   name: ecobot-telegram
 spec:
   replicas: 1
+  revisionHistoryLimit: 3
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -19,7 +20,6 @@ spec:
       labels:
         app: ecobot-telegram
     spec:
-      revisionHistoryLimit: 3
       volumes:
       - name: s3-volume
         persistentVolumeClaim:
