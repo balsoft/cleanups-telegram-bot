@@ -282,8 +282,8 @@ def location(update: Update, context: CallbackContext) -> int:
     """Stores the location and asks for some info about the user."""
     user = update.message.from_user
     gps_regex = r'^([-+]?)([\d]{1,2})(((\.)(\d+)(,)))(\s*)(([-+]?)([\d]{1,3})((\.)(\d+))?)$'
-    google_regex = r'^https://goo.gl/maps/.*'
-    yandex_regex = r'^https://yandex.ru/maps/.*'
+    google_regex = r'https://goo.gl/maps/.*'
+    yandex_regex = r'https://yandex.ru/maps/.*'
 
     if update.message.location:
         user_location_loc = update.message.location
@@ -390,9 +390,15 @@ def location(update: Update, context: CallbackContext) -> int:
         if re.match(gps_regex, update.message.text):
             coordinate_type = "Custom GPS"
             coordinate_url = "https://www.google.com/maps/search/?api=1&query=%s" % (update.message.text)
-        else:
-            coordinate_type = "Google/Yandex map"
-            coordinate_url = update.message.text
+        elif re.match(google_regex, update.message.text):
+            coordinate_type = "Google Maps"
+            google_maps_url = re.search(google_regex, update.message.text)
+            coordinate_url = google_maps_url.group()
+        elif re.match(yandex_regex, update.message.text):
+            coordinate_type = "Yandex Maps"
+            yandex_maps_url = re.search(yandex_regex, update.message.text)
+            coordinate_url = yandex_maps_url.group()
+        
         context.user_data['notion_base_page']['properties']['Location'] = {
                     "rich_text": [
                         {
