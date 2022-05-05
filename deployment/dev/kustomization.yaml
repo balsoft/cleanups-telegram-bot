@@ -6,7 +6,3 @@ resources:
 - secrets.yaml
 - pvc.yaml
 namespace: telegram-dev
-images:
-- name: cr.yandex/crp5greagvr5ibj796uu/ecobot/telegram-bot
-  newTag: main.db00e1cd.16
-
