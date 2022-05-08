@@ -1,0 +1,52 @@
+open_phrase:
+  ru:  'Привет! Я бот куда ты можешь отправить сообщение о грязном месте. Пожалуйста выбери свой язык'
+  en:  'Hi! Im a bot where you can report a place with trash. Please choose your language'
+  hy:  'Ողջու՜յն! Ես բոտ եմ, որտեղ կարող եք զեկուցել աղբարկղ ունեցող վայրի մասին: Խնդրում ենք ընտրել ձեր լեզուն'
+intro:
+  en: 'I will ask you for description, photos/ videos and location of a place. You can press /cancel anytime to stop the process'
+  ru: 'Я попрошу тебя прислать описание, фото и видео места с мусором. Ты можешь остановить процесс нажав /cancel'
+  hy: 'Ես ձեզանից կխնդրեմ նկարագրություն, լուսանկարներ/տեսանյութեր և վայրի գտնվելու վայրը: Գործընթացը դադարեցնելու համար ցանկացած պահի կարող եք սեղմել /cancel'
+description:
+  en: 'Please tell us where this place is located. Eg Yerevan, Razdan river bank.'
+  ru: 'Пожалуйста напиши где находится место с мусором. Например - Ереван, берег реки раздан'
+  hy: 'Խնդրում եմ, ասեք մեզ, թե որտեղ է գտնվում այս վայրը։ Օրինակ՝ Երևան, Ռազդան գետի ափ։'
+done_button:
+  en: 'done'
+  ru: 'готово'
+  hy: 'Կատարված'
+media_phrase:
+  en:  'Good! Send me a photos and videos  of a location. Please wait untill i upload all the photos and press done.'
+  ru: 'Хорошо! Отправь фото и видео места. Дождись как я загружу все и нажми готово'
+  hy: 'Լավ։ Ուղարկեք ինձ որևէ վայրի լուսանկարներ և տեսանյութեր: Խնդրում եմ սպասեք, մինչև ես վերբեռնեմ բոլոր լուսանկարները և սեղմեմ ավարտված:'
+wait_for_media:
+  en: 'Please wait untill every  media file is uploaded and press done to end an upload process'
+  ru: 'Пожалуйста дождитесь когда каждый файл будет загружен и нажмите готово чтобы завершить процесс'
+  hy: 'Խնդրում ենք սպասել, մինչև յուրաքանչյուր մեդիա ֆայլ վերբեռնվի և սեղմեք «Կատարված»՝ վերբեռնման գործընթացն ավարտելու համար'
+photo_uploaded:
+  en: 'Photo has been uploaded'
+  ru: 'Фото было загружено'
+  hy: 'Լուսանկարը վերբեռնվել է'
+video_uploaded:
+  en: 'Video has been uploaded'
+  ru: 'Видео было загружено'
+  hy: 'Տեսանյութը վերբեռնվել է'
+media_error:
+  en: 'Error - please press done or send me the media'
+  ru: 'Ошибка - пожалуйста нажмите Готово или пришлите еще медиа файлов'
+  hy: 'Սխալ. խնդրում եմ սեղմել արված է կամ ուղարկել ինձ լրատվամիջոցը'
+location_phrase:
+  en: 'Good! Now send me location of a place, you can share telegram location, google/yandex maps link or send a screenshot of a location'
+  ru: 'Хорошо! Теперь отправь локацию места - ты можешь поделится локацией из телеграм , ссылкой на google/yandex карты или прислать скриншот локации'
+  hy: 'Լավ! Այժմ ուղարկեք ինձ մի վայրի գտնվելու վայրը, կարող եք կիսվել հեռագրում կամ ուղարկել տեղանքի սքրինշոթ'
+location_error:
+ en: 'Please send me Telegram location or Location Screenshot'
+ ru: 'Пожалуйста отправь локацию из телеграм илм скриншот локации'
+ hy: 'Խնդրում եմ ուղարկել ինձ Telegram-ի գտնվելու վայրը կամ գտնվելու վայրի սքրինշոթը'
+location_done:
+ en: 'Great - all done! You have reported a location. Press /start to report again'
+ ru: 'Ура - все готов! Ты отправил локацию. Нажми /start чтобы отправить еще одно место'
+ hy: 'Հիանալի - ամեն ինչ արված է: Դուք հայտնել եք տեղադրության մասին: Կրկին զեկուցելու համար սեղմեք /սկսել'
+cancel_phrase:
+ en: 'You have cancelled the conversation. Press /start to report again'
+ ru: 'Ты прервал разговор. Нажмите /start чтобы запустить еще раз'
+ hy: 'Դուք չեղարկել եք զրույցը: Կրկին զեկուցելու համար սեղմեք /start'

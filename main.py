@@ -1,15 +1,6 @@
 # Author - Narek Tatevosyan public@narek.tel
 
-"""
-First, a few callback functions are defined. Then, those functions are passed to
-the Dispatcher and registered at their respective places.
-Then, the bot is started and runs until we press Ctrl-C on the command line.
-Usage:
-Example of a bot-user conversation using ConversationHandler.
-Send /start to initiate the conversation.
-Press Ctrl-C on the command line or send a signal to the process to stop the
-bot.
-"""
+#libraries
 
 import logging
 import os
@@ -42,20 +33,17 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
+
+
 TELEGRAM_TOKEN = os.environ['TELEGRAM_TOKEN']
-LANGUAGE,DESCRIPTION,MEDIA,LOCATION  = range(4)
 
 
 database_id = os.environ['NOTION_DATABASE']
-
 notion = Client(auth=os.environ['NOTION_API_KEY'])
-S3_FILE_PREFIX = '/data/dynamic'
-
 
 session = boto3.session.Session()
 
 BUCKET=os.environ['S3_BUCKET']
-PVC_NAME=os.environ['PVC_NAME']
 s3_bucket_endpoint = 'https://storage.yandexcloud.net'
 s3_client = session.client(
     service_name='s3',
@@ -63,11 +51,18 @@ s3_client = session.client(
     aws_secret_access_key=os.environ['AWS_KEY'],
     endpoint_url=s3_bucket_endpoint,
 )
-PHRASES_FILE_PREFIX = '/data/tmpfs'
+boto3.set_stream_logger('boto3.resources', logging.INFO)
+DATA_PATH_PREFIX = os.environ['DATA_PATH_PREFIX']
+S3_FILE_PREFIX = '%s/dynamic' % (DATA_PATH_PREFIX)
+PHRASES_FILE_PREFIX = '%s/tmpfs' % (DATA_PATH_PREFIX)
 PHRASES_FILE = 'phrases.yaml'
+
+LANGUAGE,DESCRIPTION,MEDIA,LOCATION  = range(4)
+
 
 def read_phrase_in_a_language(phrase,language):
     with open(r'%s/%s' %(PHRASES_FILE_PREFIX,PHRASES_FILE)) as file:
+
     # The FullLoader parameter handles the conversion from YAML
     # scalar values to Python the dictionary format
         phrase_dict = yaml.load(file, Loader=yaml.FullLoader)
@@ -95,7 +90,7 @@ def start(update: Update, context: CallbackContext) -> int:
 
 
 def language(update: Update, context: CallbackContext) -> int:
-    print(update.message)
+    #print(update.message)
     
     language = update.message.text
     user_name = update.message.chat.first_name
@@ -125,18 +120,9 @@ def language(update: Update, context: CallbackContext) -> int:
     elif language == 'English':
         context.user_data['language'] = 'en'
     """Starts the conversation and asks to continue"""
-    user_id = str(update.message.chat.id)
-    chat_date = str(update.message.date.strftime('%s'))
-    report_id = '%s-%s' % (user_id,chat_date)
-    context.user_data['notion_base_page']['properties']['id'] = {
-                    "title": [
-                        {
-                            "text": {
-                                "content": report_id
-                            }
-                        },
-                    ]
-                }
+    
+    
+    #print(context.user_data['notion_base_page'])
     context.user_data['notion_base_page']['properties']['reported_by'] = {
                     "rich_text": [
                         {
@@ -149,7 +135,6 @@ def language(update: Update, context: CallbackContext) -> int:
                         }
                     ]	
                 }
-    print(context.user_data['notion_base_page'])
                 
     update.message.reply_text(
         read_phrase_in_a_language('intro',context.user_data['language'])
@@ -163,8 +148,21 @@ def description(update: Update, context: CallbackContext) -> int:
     user = update.message.from_user
     context.user_data['done_button'] = read_phrase_in_a_language('done_button',context.user_data['language'])
     report_description = update.message.text
+    context.user_data['media_files'] = []
     #print(update.message)
     logger.info("Description of %s: %s", user.first_name,report_description)
+    user_id = str(update.message.chat.id)
+    chat_date = str(update.message.date.strftime('%s'))
+    report_id = '%s-%s' % (user_id,chat_date)
+    context.user_data['notion_base_page']['properties']['id'] = {
+                    "title": [
+                        {
+                            "text": {
+                                "content": report_description
+                            }
+                        },
+                    ]
+                }
     update.message.reply_text(
             read_phrase_in_a_language('media_phrase',context.user_data['language'])
        ## reply_markup = ReplyKeyboardMarkup(
@@ -208,6 +206,7 @@ def description(update: Update, context: CallbackContext) -> int:
 def media(update: Update, context: CallbackContext) -> int:
     end_message = context.user_data['done_button']
     reply_keyboard = [[end_message]]
+
     
     user_id = str(update.message.chat.id)
     chat_date = str(update.message.date.strftime('%s'))
@@ -235,11 +234,9 @@ def media(update: Update, context: CallbackContext) -> int:
         if update.message.photo:
             photo_file = update.message.photo[-1].get_file()
             random_suffix =  ''.join(random.choice(string.ascii_lowercase) for i in range(10)) 
-            photo_file_name = 'user_photo-%s-%s-%s.jpg' % (random_suffix,chat_date,user_id)
-            photo_file.download(S3_FILE_PREFIX+'/'+ photo_file_name)
-           # s3_client.upload_file(photo_file_name, BUCKET , photo_file_name)     
-           #os.remove(photo_file_name)
-            image_url = s3_bucket_endpoint+'/'+BUCKET+'/' + PVC_NAME +'/' + photo_file_name
+            photo_file_name ='user_photo-%s-%s-%s.jpg' % (random_suffix,chat_date,user_id)
+            photo_file.download("%s/%s" % (S3_FILE_PREFIX,photo_file_name))
+            image_url = '%s/%s/%s' % (s3_bucket_endpoint,BUCKET,photo_file_name)
             context.user_data['notion_base_page']['children'].append({
                 "object": "block",
                     "type": "image",
@@ -250,18 +247,19 @@ def media(update: Update, context: CallbackContext) -> int:
                             }
                     }
             })
+            context.user_data['media_files'].append(photo_file_name)
+         #   print(context.user_data['media_files'])
             update.message.reply_text(
             read_phrase_in_a_language('photo_uploaded',context.user_data['language'])
             )   
             return MEDIA
         if update.message.video:
-            vide_file = update.message.video.get_file()
+            video_file = update.message.video.get_file()
             random_suffix =  ''.join(random.choice(string.ascii_lowercase) for i in range(10)) 
-            video_file_name = 'user_video-%s-%s-%s.mp4' % (random_suffix,chat_date,user_id)
-            vide_file.download(S3_FILE_PREFIX+'/' + video_file_name)
-          #  s3_client.upload_file(video_file_name, BUCKET , video_file_name)     
-           # os.remove(video_file_name)
-            video_url = s3_bucket_endpoint+'/'+BUCKET+ '/' + PVC_NAME +'/' + video_file_name
+
+            video_file_name ='user_video-%s-%s-%s.mp4' % (random_suffix,chat_date,user_id)
+            video_file.download("%s/%s" % (S3_FILE_PREFIX,video_file_name))
+            video_url = '%s/%s/%s' % (s3_bucket_endpoint,BUCKET,video_file_name)
             context.user_data['notion_base_page']['children'].append({
                 "object": "block",
                     "type": "video",
@@ -272,6 +270,7 @@ def media(update: Update, context: CallbackContext) -> int:
                             }
                     }
             })
+            context.user_data['media_files'].append(video_file_name)
             update.message.reply_text(
             read_phrase_in_a_language('video_uploaded',context.user_data['language'])
             )  
@@ -352,11 +351,10 @@ def location(update: Update, context: CallbackContext) -> int:
         )
         photo_file = update.message.photo[-1].get_file()
         random_suffix =  ''.join(random.choice(string.ascii_lowercase) for i in range(10)) 
-        photo_file_name = 'location_photo-%s-%s-%s.jpg' % (random_suffix,chat_date,user_id)
-        photo_file.download(S3_FILE_PREFIX+ '/' +photo_file_name)
-        #s3_client.upload_file(photo_file_name, BUCKET , photo_file_name)     
-       # os.remove(photo_file_name)
-        image_url = s3_bucket_endpoint+'/'+BUCKET+'/' + PVC_NAME +'/' + photo_file_name
+
+        photo_file_name ='location_photo-%s-%s-%s.jpg' % (random_suffix,chat_date,user_id)
+        photo_file.download("%s/%s" % (S3_FILE_PREFIX,photo_file_name))
+        image_url = '%s/%s/%s' % (s3_bucket_endpoint,BUCKET,photo_file_name)
         context.user_data['notion_base_page']['properties']['Location'] = {
                     "rich_text": [
                         {
@@ -377,6 +375,7 @@ def location(update: Update, context: CallbackContext) -> int:
                         }
                 }
         })
+        context.user_data['media_files'].append(photo_file_name)
     elif update.message.text and (re.match(gps_regex, update.message.text) or re.match(google_regex, update.message.text) or re.match(yandex_regex,update.message.text)):
         context.user_data['notion_base_page']['children'].append(
         {
@@ -433,9 +432,17 @@ def location(update: Update, context: CallbackContext) -> int:
         update.message.reply_text(read_phrase_in_a_language('location_error',context.user_data['language']))
         return LOCATION
     
+
+    
     page = notion.pages.create(
     **context.user_data['notion_base_page']
     )
+    print(context.user_data['media_files'])
+    for media_file_name in context.user_data['media_files']:
+        print(media_file_name)
+        s3_client.upload_file("%s/%s" % (S3_FILE_PREFIX,media_file_name), BUCKET , media_file_name)
+
+    
     
     return ConversationHandler.END
     

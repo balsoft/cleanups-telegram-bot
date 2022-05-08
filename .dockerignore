@@ -2,3 +2,5 @@
 .dockerignore
 deployment
 Dockerfile
+./data
+./deployment
