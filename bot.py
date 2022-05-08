@@ -1,5 +1,4 @@
-# pylint: disable=C0116,W0613
-# This program is dedicated to the public domain under the CC0 license.
+# Author - Narek Tatevosyan public@narek.tel
 
 """
 First, a few callback functions are defined. Then, those functions are passed to
@@ -287,7 +286,7 @@ def location(update: Update, context: CallbackContext) -> int:
     user = update.message.from_user
     gps_regex = r'^([-+]?)([\d]{1,2})(((\.)(\d+)(,)))(\s*)(([-+]?)([\d]{1,3})((\.)(\d+))?)$'
     google_regex = r'https://.*goo.gl/.*'
-    yandex_regex = r'https://yandex.ru/maps/.*'
+    yandex_regex = r'https://yandex.*'
 
     if update.message.location:
         user_location_loc = update.message.location

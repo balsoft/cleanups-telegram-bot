@@ -2,3 +2,5 @@ notion_client
 boto3
 python-telegram-bot
 pyyaml
+gmplot
+
