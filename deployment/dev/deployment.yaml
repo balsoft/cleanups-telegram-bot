@@ -56,11 +56,17 @@ spec:
               name: bot-secrets
               key: NOTION_API_KEY
               optional: false # same as default; "mysecret" must exist
-        - name: NOTION_DATABASE
+        - name: TRASH_DB_ID
           valueFrom:
             secretKeyRef:
               name: bot-secrets
-              key: NOTION_DATABASE
+              key: TRASH_DB_ID
+              optional: false # same as default; "mysecret" must exist
+        - name: URN_DB_ID
+          valueFrom:
+            secretKeyRef:
+              name: bot-secrets
+              key: URN_DB_ID
               optional: false # same as default; "mysecret" must exist
         - name: S3_BUCKET
           valueFrom:
