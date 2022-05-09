@@ -38,7 +38,8 @@ logger = logging.getLogger(__name__)
 TELEGRAM_TOKEN = os.environ['TELEGRAM_TOKEN']
 
 
-database_id = os.environ['NOTION_DATABASE']
+
+
 notion = Client(auth=os.environ['NOTION_API_KEY'])
 
 session = boto3.session.Session()
@@ -57,7 +58,7 @@ S3_FILE_PREFIX = '%s/dynamic' % (DATA_PATH_PREFIX)
 PHRASES_FILE_PREFIX = '%s/tmpfs' % (DATA_PATH_PREFIX)
 PHRASES_FILE = 'phrases.yaml'
 
-LANGUAGE,DESCRIPTION,MEDIA,LOCATION  = range(4)
+LANGUAGE,ACTION,DESCRIPTION,MEDIA,LOCATION  = range(5)
 
 
 def read_phrase_in_a_language(phrase,language):
@@ -96,23 +97,7 @@ def language(update: Update, context: CallbackContext) -> int:
     user_name = update.message.chat.first_name
     user_telegram_url = update.message.chat.username
     context.user_data['language'] = ''
-    print(context.user_data)
-    context.user_data['notion_base_page'] = {
-
-            "parent": {
-                "database_id": database_id
-            },
-            "properties": {
-                "Status": {
-                    "select": {
-                        "name": "Moderation"
-                    }
-                },
-
-            },
-            "children": []
-    } 
-
+   
     if language == 'Հայերեն':
         context.user_data['language'] = 'hy'
     elif language == 'Русский':
@@ -120,9 +105,37 @@ def language(update: Update, context: CallbackContext) -> int:
     elif language == 'English':
         context.user_data['language'] = 'en'
     """Starts the conversation and asks to continue"""
+    print(context.user_data['language'])
+    report_keyboard = read_phrase_in_a_language('action_button',context.user_data['language'])
+    reply_keyboard = [report_keyboard]
+    print(report_keyboard)
     
+    update.message.reply_text(
+        read_phrase_in_a_language('intro_phrase',context.user_data['language'])
+    )
+    update.message.reply_text(
+        read_phrase_in_a_language('action_phrase',context.user_data['language']),
+                                    reply_markup=ReplyKeyboardMarkup(
+                                        reply_keyboard,one_time_keyboard=True)
+                                        )
+                                        
     
     #print(context.user_data['notion_base_page'])
+    
+    context.user_data['notion_base_page'] = {
+
+                "properties": {
+                    "Status": {
+                        "select": {
+                            "name": "Moderation"
+                        }
+                    },
+
+                },
+                "children": []
+        } 
+
+
     context.user_data['notion_base_page']['properties']['reported_by'] = {
                     "rich_text": [
                         {
@@ -136,16 +149,32 @@ def language(update: Update, context: CallbackContext) -> int:
                     ]	
                 }
                 
-    update.message.reply_text(
-        read_phrase_in_a_language('intro',context.user_data['language'])
-    )
-    update.message.reply_text(
-        read_phrase_in_a_language('description',context.user_data['language'])
-    )
-    return DESCRIPTION
+    print()
 
+    
+    return ACTION 
+
+def action(update: Update, context: CallbackContext) -> int:   
+    #first button is a Place to clean
+    if update.message.text in [read_phrase_in_a_language('action_button',lang)[0] for lang in ['ru','en','hy']]:
+       context.user_data['database_id'] = os.environ['TRASH_DB_ID']
+    elif  update.message.text in [read_phrase_in_a_language('action_button',lang)[1] for lang in ['ru','en','hy']]:
+       context.user_data['database_id'] = os.environ['URN_DB_ID']
+    # print(context.user_data)
+    context.user_data['notion_base_page']['parent'] = {
+
+                "database_id": context.user_data['database_id']
+    } 
+
+    update.message.reply_text(
+        read_phrase_in_a_language('description_phrase',context.user_data['language']),
+                                        )
+            
+    return DESCRIPTION
 def description(update: Update, context: CallbackContext) -> int:   
     user = update.message.from_user
+
+    
     context.user_data['done_button'] = read_phrase_in_a_language('done_button',context.user_data['language'])
     report_description = update.message.text
     context.user_data['media_files'] = []
@@ -318,6 +347,17 @@ def location(update: Update, context: CallbackContext) -> int:
                     ]			
             
         }
+        context.user_data['notion_base_page']['properties']['marker'] = {
+                   "rich_text": [
+                        {
+                            "text": {
+                                "content": "%s, %s" % (user_location_loc.latitude,user_location_loc.longitude)
+                                }
+
+                            }
+                        
+                    ]
+        }
         context.user_data['notion_base_page']['children'].append({
                 "object": "block",
                 "type": "paragraph",
@@ -475,6 +515,7 @@ def main() -> None:
         entry_points=[CommandHandler('start', start)],
         states={
             LANGUAGE: [ MessageHandler(Filters.text & ~Filters.command, language)],
+            ACTION: [ MessageHandler(Filters.text & ~Filters.command, action)],
             DESCRIPTION: [ MessageHandler(Filters.text & ~Filters.command, description)],
             MEDIA: [ MessageHandler(Filters.photo | Filters.video | Filters.text & ~Filters.command, media)],
             LOCATION: [ MessageHandler(Filters.location | Filters.photo | Filters.text & ~Filters.command & ~Filters.command, location)], 
