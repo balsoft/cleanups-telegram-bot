@@ -59,5 +59,11 @@ spec:
                   name: bot-secrets
                   key: GMAP_APIKEY
                   optional: false # same as default; "mysecret" must exist
+            - name: NOTION_STATIC_PAGE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: bot-secrets
+                  key: NOTION_STATIC_PAGE_URL
+                  optional: false # same as default; "mysecret" must exist
   
             
