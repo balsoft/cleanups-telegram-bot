@@ -9,7 +9,7 @@ import gmplot
 import mimetypes
 
 
-database_id = os.environ['NOTION_DATABASE']
+database_id = os.environ['TRASH_DB_ID']
 notion = Client(auth=os.environ['NOTION_API_KEY'])
 
 session = boto3.session.Session()
@@ -90,7 +90,7 @@ for status in statuses:
             else:
                 label = "C"
                 colour = clean_colour
-            gmap.marker(marker_loc[0], marker_loc[1], color=colour, title=marker_name,label=label, info_window="%s <br/> reported by %s <br/> <a href='https://www.google.com/maps/search/?api=1&query=%s,%s'>Найти в Google</a>" % (marker_name,reporter_by,str(marker_loc[0]), str(marker_loc[1])) )
+            gmap.marker(marker_loc[0], marker_loc[1], color=colour, title=marker_name,label=label, info_window="%s <br/> reported by %s <br/> <a href='%s'>Details</a>" % (marker_name,reporter_by,page['url']) )
         if page['properties']['polygon']['rich_text'] != []:
             polygon = parse_polygon_from_page(page_id)
             print(polygon)

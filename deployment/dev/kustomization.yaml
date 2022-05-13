@@ -5,4 +5,5 @@ resources:
 - deployment.yaml
 - secrets.yaml
 - pvc.yaml
+- cronjob.yaml
 namespace: telegram-dev
