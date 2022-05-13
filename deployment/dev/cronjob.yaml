@@ -3,7 +3,7 @@ kind: CronJob
 metadata:
   name: ecobot-map
 spec:
-  schedule: "* 1 * * *"
+  schedule: "@hourly"
   jobTemplate:
     spec:
       template:
@@ -46,6 +46,12 @@ spec:
                 secretKeyRef:
                   name: bot-secrets
                   key: S3_BUCKET
+                  optional: false # same as default; "mysecret" must exist
+            - name: GMAP_APIKEY
+              valueFrom:
+                secretKeyRef:
+                  name: bot-secrets
+                  key: GMAP_APIKEY
                   optional: false # same as default; "mysecret" must exist
             - name: GMAP_APIKEY
               valueFrom:
