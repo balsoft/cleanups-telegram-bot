@@ -93,7 +93,7 @@ for status in statuses:
             else:
                 label = "C"
                 colour = clean_colour
-            gmap.marker(marker_loc[0], marker_loc[1], color=colour, title=marker_name,label=label, info_window="%s <br/> reported by %s <br/> <a href='https://%s/%s'>Details</a>" % (marker_name,reporter_by,notion_static_page_url,page_id) )
+            gmap.marker(marker_loc[0], marker_loc[1], color=colour, title=marker_name,label=label, info_window="%s <br/> reported by %s <br/> <a href='https://%s/%s' target='_blank'>Details</a>" % (marker_name,reporter_by,notion_static_page_url,page_id) )
         if page['properties']['polygon']['rich_text'] != []:
             polygon = parse_polygon_from_page(page_id)
             print(polygon)
