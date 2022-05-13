@@ -80,7 +80,7 @@ for status in statuses:
     }
     print(status)
     for page in notion.databases.query(**fltr)['results']:
-        page_id = page['id']
+        page_id = page['id'].replace('-','')
         if page['properties']['marker']['rich_text'] != []:
             print(page['properties']['id']['title'][0]['plain_text'])
             marker_loc = parse_marker_from_page(page_id)
