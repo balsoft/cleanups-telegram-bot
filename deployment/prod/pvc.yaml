@@ -9,4 +9,4 @@ spec:
   resources:
     requests:
       storage: 1000Gi
-  storageClassName: s3-csi-dev
+  storageClassName: s3-csi-prod
