@@ -1,8 +1,9 @@
 stages:          # List of stages for jobs, and their order of execution
-  - build
+  - build_to_dev
+  - build_to_prod
 
-build:
-  stage: build
+build_to_dev:
+  stage: build_to_dev
   image:
     name: gcr.io/kaniko-project/executor:debug
     entrypoint: [""]
@@ -15,3 +16,20 @@ build:
       --context "${CI_PROJECT_DIR}"
       --dockerfile "${CI_PROJECT_DIR}/Dockerfile"
       --destination "${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}:0.0.${CI_PIPELINE_ID}"
+
+
+build_to_prod:
+  stage: build_to_prod
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  before_script:
+    - mkdir -p /kaniko/.docker
+    - echo "{\"auths\":{\"${PROD_CI_REGISTRY}\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "$(echo -n ${PROD_CI_REGISTRY_PASSWORD} | base64 -d)" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
+  script:
+    - >-
+      /kaniko/executor
+      --context "${CI_PROJECT_DIR}"
+      --dockerfile "${CI_PROJECT_DIR}/Dockerfile"
+      --destination "${PROD_CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}:0.0.${CI_PIPELINE_ID}"
+  when: manual
