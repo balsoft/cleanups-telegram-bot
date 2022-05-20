@@ -41,6 +41,15 @@ TELEGRAM_TOKEN = os.environ['TELEGRAM_TOKEN']
 
 
 notion = Client(auth=os.environ['NOTION_API_KEY'])
+if 'LANGUAGES' in os.environ:
+    language_list = [language.strip() for language in os.environ['LANGUAGES'].split(',')]
+else:
+    language_list = ['hy','ru','en']
+
+if 'ACTIONS' in os.environ:
+    action_list = [action.strip() for action in os.environ['ACTIONS'].split(',')]
+else:
+    action_list = ['report_dirty_place','report_place_for_urn']
 
 session = boto3.session.Session()
 
@@ -72,15 +81,16 @@ def read_phrase_in_a_language(phrase,language):
 
 
 def start(update: Update, context: CallbackContext) -> int:
-    """Starts the conversation and asks to continue"""
-    reply_keyboard = [['Հայերեն', 'Русский', 'English']]
+    """Starts the conversation and asks for a language"""
 
-    update.message.reply_text(
-        
-        read_phrase_in_a_language('open_phrase','hy') +'\n' +
-        read_phrase_in_a_language('open_phrase','ru') +'\n' +
-        read_phrase_in_a_language('open_phrase','en')
+    reply_keyboard = [[read_phrase_in_a_language('language_name',language.strip()) for language in language_list ]]
+    #reply_keyboard = [['Հայերեն', 'Русский', 'English']]
 
+    reply_text = ''
+    for language in language_list:
+        reply_text+= read_phrase_in_a_language('open_phrase',language) + '\n'
+    update.message.reply_text(   
+        reply_text
         ,
         reply_markup=ReplyKeyboardMarkup(
             reply_keyboard,one_time_keyboard=True
@@ -104,11 +114,16 @@ def language(update: Update, context: CallbackContext) -> int:
         context.user_data['language'] = 'ru'
     elif language == 'English':
         context.user_data['language'] = 'en'
-    """Starts the conversation and asks to continue"""
+    elif language == 'Georgian':
+        context.user_data['language'] = 'ge' 
+    """Composes list of available actions"""
     print(context.user_data['language'])
-    report_keyboard = read_phrase_in_a_language('action_button',context.user_data['language'])
-    reply_keyboard = [report_keyboard]
-    print(report_keyboard)
+    reply_keyboard = [[]]
+    for action in action_list:
+        reply_keyboard[0].append(read_phrase_in_a_language(action,context.user_data['language']))
+    #report_keyboard = read_phrase_in_a_language('action_button',context.user_data['language'])
+    #reply_keyboard = [report_keyboard]
+    #print(report_keyboard)
     
     update.message.reply_text(
         read_phrase_in_a_language('intro_phrase',context.user_data['language'])
@@ -156,9 +171,9 @@ def language(update: Update, context: CallbackContext) -> int:
 
 def action(update: Update, context: CallbackContext) -> int:   
     #first button is a Place to clean
-    if update.message.text in [read_phrase_in_a_language('action_button',lang)[0] for lang in ['ru','en','hy']]:
+    if update.message.text in [read_phrase_in_a_language('report_dirty_place',lang) for lang in language_list]:
        context.user_data['database_id'] = os.environ['TRASH_DB_ID']
-    elif  update.message.text in [read_phrase_in_a_language('action_button',lang)[1] for lang in ['ru','en','hy']]:
+    elif  update.message.text in [read_phrase_in_a_language('report_place_for_urn',lang) for lang in language_list]:
        context.user_data['database_id'] = os.environ['URN_DB_ID']
     # print(context.user_data)
     context.user_data['notion_base_page']['parent'] = {

@@ -38,6 +38,10 @@ spec:
         - mountPath: /data/tmpfs
           name: tmpfs-volume
         env:
+        - name: LANGUAGES
+          value: "en,ru"
+        - name: ACTIONS
+          value: "report_dirty_place"
         - name: AWS_KEY
           valueFrom:
             secretKeyRef:

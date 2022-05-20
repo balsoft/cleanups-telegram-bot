@@ -1,3 +1,7 @@
+language_name:
+  ru:  'Русский'
+  en:  'English'
+  hy:  'Հայերեն'
 open_phrase:
   ru:  'Привет! Я бот куда ты можешь отправить сообщение о грязном месте. Пожалуйста выбери свой язык'
   en:  'Hi! Im a bot where you can report a place with trash. Please choose your language'
@@ -6,16 +10,14 @@ intro_phrase:
   en: 'I will ask you for description, photos/ videos and location of a place. You can press /cancel anytime to stop the process'
   ru: 'Я попрошу тебя прислать описание, фото и видео места нуждающегося в уборке или урне. Ты можешь остановить процесс нажав /cancel'
   hy: 'Ես քեզանից կխնդրեմ նկարագրություն, լուսանկարներ/տեսանյութեր և աղբահանության կարիք ունեցող գտնվելու վայրը: Գործընթացը դադարեցնելու համար ցանկացած պահի կարող ես սեղմել /cancel'
-action_button:
-  en: 
-    - 'Place to clean'
-    - 'Place for urn'
-  ru: 
-    - 'Место для уборки'
-    - 'Место для урны'
-  hy: 
-    - 'Մաքրելու վայր'
-    - 'Տեղ աղբամանի համար'
+report_dirty_place:
+  en: 'Place to clean'
+  ru: 'Место для уборки'
+  hy: 'Մաքրելու վայր'
+report_place_for_urn:
+  en: 'Place for urn'
+  ru: 'Место для урны'
+  hy: 'Տեղ աղբամանի համար'
 action_phrase:
   en:  'What place do you want to report?'
   ru:  'О каком месте ты хочешь сообщить?'
