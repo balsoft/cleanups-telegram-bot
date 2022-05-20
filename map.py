@@ -12,6 +12,22 @@ import mimetypes
 database_id = os.environ['TRASH_DB_ID']
 notion = Client(auth=os.environ['NOTION_API_KEY'])
 
+
+if 'MAP_CENTER' in os.environ:
+    map_center = [float(t) for t in os.environ['MAP_CENTER'].split(',')]
+else:
+    map_center= [40.194554, 44.509529]
+
+if 'MAP_SIZE' in os.environ:
+    map_size = os.environ['MAP_SIZE']
+else:
+    map_size = 13
+
+if 'MAP_NAME' in os.environ:
+    map_name = os.environ['MAP_NAME']
+else:
+    map_name = 'map.html'
+
 session = boto3.session.Session()
 
 BUCKET=os.environ['S3_BUCKET']
@@ -56,7 +72,7 @@ def parse_location_from_yaml(filename):
 
 
 
-gmap = gmplot.GoogleMapPlotter(40.194554, 44.509529, 13, apikey=os.environ['GMAP_APIKEY'])
+gmap = gmplot.GoogleMapPlotter(map_center[0], map_center[1], map_size, apikey=os.environ['GMAP_APIKEY'])
 clean_colour = 'green'
 clean_edge_colour = 'darkgreen'
 dirty_colour = 'red'
@@ -106,7 +122,7 @@ for status in statuses:
             gmap.polygon(*zip(*polygon), face_color=face_colour, edge_color=edge_colour, edge_width=2)
 
             
-map_filename = 'map.html'
+map_filename = map_name
 gmap.draw(map_filename)
 content_type = mimetypes.guess_type(map_filename)[0]
 
