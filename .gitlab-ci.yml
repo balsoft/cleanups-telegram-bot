@@ -1,6 +1,14 @@
 stages:          # List of stages for jobs, and their order of execution
+  - lint
   - build_to_dev
   - build_to_prod
+
+check_formatting:
+  stage: lint
+  image:
+    name: pyfound/black:22.3.0
+  script:
+    - black --check ${CI_PROJECT_DIR}
 
 build_to_dev:
   stage: build_to_dev
