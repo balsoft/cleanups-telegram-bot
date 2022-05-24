@@ -17,6 +17,12 @@ spec:
             - python3
             - map.py
             env:
+            - name: MAP_SIZE
+              value: "12"
+            - name: MAP_CENTER
+              value: "41.726142, 44.818534"
+            - name: MAP_NAME
+              value: "map_tbilisi.html"
             - name: AWS_KEY
               valueFrom:
                 secretKeyRef:
@@ -65,17 +71,5 @@ spec:
                   name: bot-secrets
                   key: NOTION_STATIC_PAGE_URL
                   optional: false # same as default; "mysecret" must exist
-            - name: MAP_CENTER
-              valueFrom:
-                secretKeyRef:
-                  name: bot-secrets
-                  key: MAP_CENTER
-                  optional: false # same as default; "mysecret" must exist
-            - name: MAP_NAME
-              valueFrom:
-                secretKeyRef:
-                  name: bot-secrets
-                  key: MAP_NAME
-                  optional: false # same as default; "mysecret" must exist
-  
+            
             

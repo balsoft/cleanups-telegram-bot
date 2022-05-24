@@ -38,6 +38,7 @@ s3_client = session.client(
 
 
 def parse_polygon_from_page(page_id, notion=notion):
+    """Function to create polygon from polygon property inside a page"""
     page = notion.pages.retrieve(**{"page_id": page_id})
     page = page["properties"]["polygon"]["rich_text"][0]["plain_text"]
 
@@ -48,6 +49,8 @@ def parse_polygon_from_page(page_id, notion=notion):
 
 
 def parse_marker_from_page(page_id, notion=notion):
+    """Function to create marker from polygon property inside a page"""
+
     page = notion.pages.retrieve(**{"page_id": page_id})
     page = page["properties"]["marker"]["rich_text"][0]["plain_text"]
     marker_list = page.split(", ")
@@ -55,6 +58,8 @@ def parse_marker_from_page(page_id, notion=notion):
 
 
 def parse_location_from_yaml(filename):
+    """Just a function for local map debug """
+
     with open(filename, "r") as stream:
         data_loaded = yaml.load(stream, Loader=yaml.FullLoader)
     polygon_loc_list = [loc.split(", ") for loc in data_loaded["polygon"]]
@@ -76,9 +81,10 @@ dirty_colour = "red"
 dirty_edge_colour = "darkred"
 
 
-statuses = ["Clean", "Dirty"]
+statuses = ["Clean", "Dirty"] #can be tranformed to feature later
 notion_static_page_url = os.environ["NOTION_STATIC_PAGE_URL"]
 
+"""We parse only pages with statuses that we provide"""
 
 for status in statuses:
     fltr = {
@@ -89,6 +95,8 @@ for status in statuses:
     for page in notion.databases.query(**fltr)["results"]:
         page_id = page["id"].replace("-", "")
         if page["properties"]["marker"]["rich_text"] != []:
+            """If page contains marker we parse it"""
+
             print(page["properties"]["id"]["title"][0]["plain_text"])
             marker_loc = parse_marker_from_page(page_id)
             marker_name = page["properties"]["id"]["title"][0]["plain_text"]
@@ -112,6 +120,7 @@ for status in statuses:
                 % (marker_name, reporter_by, notion_static_page_url, page_id),
             )
         if page["properties"]["polygon"]["rich_text"] != []:
+            """If page contains polygon we parse it"""
             polygon = parse_polygon_from_page(page_id)
             print(polygon)
             if status == "Dirty":
@@ -131,7 +140,7 @@ for status in statuses:
 map_filename = map_name
 gmap.draw(map_filename)
 content_type = mimetypes.guess_type(map_filename)[0]
-
+"""When map is ready it is uploaded to the cloud"""
 s3_client.upload_file(
     map_filename, BUCKET, map_filename, ExtraArgs={"ContentType": content_type}
 )

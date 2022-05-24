@@ -17,6 +17,8 @@ spec:
             - python3
             - map.py
             env:
+            - name: MAP_SIZE
+              value: "12"
             - name: AWS_KEY
               valueFrom:
                 secretKeyRef:

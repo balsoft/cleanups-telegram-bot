@@ -37,6 +37,7 @@ TELEGRAM_TOKEN = os.environ["TELEGRAM_TOKEN"]
 
 
 notion = Client(auth=os.environ["NOTION_API_KEY"])
+# this is language and feature flags that can be enabled via env vars
 if "LANGUAGES" in os.environ:
     language_list = [
         language.strip() for language in os.environ["LANGUAGES"].split(",")
@@ -60,7 +61,7 @@ s3_client = session.client(
     endpoint_url=s3_bucket_endpoint,
 )
 boto3.set_stream_logger("boto3.resources", logging.INFO)
-DATA_PATH_PREFIX = os.environ["DATA_PATH_PREFIX"]
+DATA_PATH_PREFIX = os.environ["DATA_PATH_PREFIX"] #dir where to store language file , its tmpfs fir in kuberentes - locally you can set any dir but it should contain /dynamic and /tmpfs subdirs
 S3_FILE_PREFIX = "%s/dynamic" % (DATA_PATH_PREFIX)
 PHRASES_FILE_PREFIX = "%s/tmpfs" % (DATA_PATH_PREFIX)
 PHRASES_FILE = "phrases.yaml"
@@ -71,8 +72,6 @@ LANGUAGE, ACTION, DESCRIPTION, MEDIA, LOCATION = range(5)
 def read_phrase_in_a_language(phrase, language):
     with open(r"%s/%s" % (PHRASES_FILE_PREFIX, PHRASES_FILE)) as file:
 
-        # The FullLoader parameter handles the conversion from YAML
-        # scalar values to Python the dictionary format
         phrase_dict = yaml.load(file, Loader=yaml.FullLoader)
         return phrase_dict[phrase][language]
 
@@ -100,7 +99,8 @@ def start(update: Update, context: CallbackContext) -> int:
 
 
 def language(update: Update, context: CallbackContext) -> int:
-    # print(update.message)
+    """Sets the language and asks for the action"""
+    """Sets the language """
 
     language = update.message.text
     user_name = update.message.chat.first_name
@@ -117,6 +117,8 @@ def language(update: Update, context: CallbackContext) -> int:
         context.user_data["language"] = "ge"
     """Composes list of available actions"""
     print(context.user_data["language"])
+    """Creates Action list is set and sends it to user"""
+
     reply_keyboard = [[]]
     for action in action_list:
         reply_keyboard[0].append(
@@ -135,6 +137,8 @@ def language(update: Update, context: CallbackContext) -> int:
     )
 
     # print(context.user_data['notion_base_page'])
+    """Start constructing notion page for the report """
+
 
     context.user_data["notion_base_page"] = {
         "properties": {
@@ -160,7 +164,8 @@ def language(update: Update, context: CallbackContext) -> int:
 
 
 def action(update: Update, context: CallbackContext) -> int:
-    # first button is a Place to clean
+    """Sets appropriate notion database id for the report. 
+    Right now report formats are the same"""
     if update.message.text in [
         read_phrase_in_a_language("report_dirty_place", lang) for lang in language_list
     ]:
@@ -174,7 +179,7 @@ def action(update: Update, context: CallbackContext) -> int:
     context.user_data["notion_base_page"]["parent"] = {
         "database_id": context.user_data["database_id"]
     }
-
+    """Asks user for the report description"""
     update.message.reply_text(
         read_phrase_in_a_language("description_phrase", context.user_data["language"]),
     )
@@ -183,29 +188,36 @@ def action(update: Update, context: CallbackContext) -> int:
 
 
 def description(update: Update, context: CallbackContext) -> int:
+    """Sets the decription and asks user for the media"""
+    """Sets the decription"""
+
     user = update.message.from_user
+    # print(update.message)
+    
+    user_id = str(update.message.chat.id)
+    chat_date = str(update.message.date.strftime("%s"))
+    report_id = "%s-%s" % (user_id, chat_date)
+    report_description = update.message.text
+    logger.info("Description of %s: %s", user.first_name, report_description)
+   
+    
+    """Asks user for media"""
 
     context.user_data["done_button"] = read_phrase_in_a_language(
         "done_button", context.user_data["language"]
     )
-    report_description = update.message.text
-    context.user_data["media_files"] = []
-    # print(update.message)
-    logger.info("Description of %s: %s", user.first_name, report_description)
-    user_id = str(update.message.chat.id)
-    chat_date = str(update.message.date.strftime("%s"))
-    report_id = "%s-%s" % (user_id, chat_date)
-    context.user_data["notion_base_page"]["properties"]["id"] = {
-        "title": [
-            {"text": {"content": report_description}},
-        ]
-    }
     update.message.reply_text(
         read_phrase_in_a_language("media_phrase", context.user_data["language"])
         ## reply_markup = ReplyKeyboardMarkup(
         ##       [KeyboardButton(request_location=True)]
         ##    )
     )
+    """Adds description to notion"""
+    context.user_data["notion_base_page"]["properties"]["id"] = {
+        "title": [
+            {"text": {"content": report_description}},
+        ]
+    }
     context.user_data["notion_base_page"]["children"].extend(
         [
             {
@@ -240,20 +252,26 @@ def description(update: Update, context: CallbackContext) -> int:
             },
         ]
     )
+
+    
     return MEDIA
 
 
 def media(update: Update, context: CallbackContext) -> int:
-    end_message = context.user_data["done_button"]
-    reply_keyboard = [[end_message]]
-
+    """Upload all the media and asks for location"""
+    """Prepares buffer and notion page to upload"""
+    context.user_data["media_files"] = []
+    
     user_id = str(update.message.chat.id)
     chat_date = str(update.message.date.strftime("%s"))
     print(user_id, chat_date)
+    end_message = context.user_data["done_button"]
+    reply_keyboard = [[end_message]]
+
 
     if update.message.text:
         if update.message.text == end_message:
-            # when user ends upload process he goes to location
+            """When user press done_button bot asks for the location """
             update.message.reply_text(
                 read_phrase_in_a_language(
                     "location_phrase", context.user_data["language"]
@@ -262,11 +280,13 @@ def media(update: Update, context: CallbackContext) -> int:
             )
             return LOCATION
         else:
+            """When user send text he got and error and is asked to try again """
             update.message.reply_text(
                 read_phrase_in_a_language("media_error", context.user_data["language"])
             )
         return MEDIA
-    else:
+    else: 
+        """When correct media is send it got uploaded to the cloud and set to notion"""
         update.message.reply_text(
             read_phrase_in_a_language("wait_for_media", context.user_data["language"]),
             reply_markup=ReplyKeyboardMarkup(
@@ -330,7 +350,7 @@ def media(update: Update, context: CallbackContext) -> int:
 
 
 def location(update: Update, context: CallbackContext) -> int:
-    """Stores the location and asks for some info about the user."""
+    """Sets the location and send data to cloud"""
     user = update.message.from_user
     gps_regex = (
         r"^([-+]?)([\d]{1,2})(((\.)(\d+)(,)))(\s*)(([-+]?)([\d]{1,3})((\.)(\d+))?)$"
@@ -339,6 +359,7 @@ def location(update: Update, context: CallbackContext) -> int:
     yandex_regex = r"https://yandex.*"
 
     if update.message.location:
+        """Stores telegram send location"""
         user_location_loc = update.message.location
         context.user_data["notion_base_page"]["children"].append(
             {
@@ -354,6 +375,8 @@ def location(update: Update, context: CallbackContext) -> int:
         update.message.reply_text(
             read_phrase_in_a_language("location_done", context.user_data["language"])
         )
+        """Writes location data  to notion"""
+
         logger.info(
             "Location of %s: %f / %f",
             user.first_name,
@@ -406,6 +429,8 @@ def location(update: Update, context: CallbackContext) -> int:
             }
         )
     elif update.message.photo:
+        """Stores location photo"""
+
         user_location_text = update.message.text
         user_id = str(update.message.chat.id)
         context.user_data["notion_base_page"]["children"].append(
@@ -457,6 +482,8 @@ def location(update: Update, context: CallbackContext) -> int:
         or re.match(google_regex, update.message.text)
         or re.match(yandex_regex, update.message.text)
     ):
+        """Stores user provided location via text ( gps regexp or yandex/google maps"""
+
         context.user_data["notion_base_page"]["children"].append(
             {
                 "object": "block",
@@ -471,6 +498,8 @@ def location(update: Update, context: CallbackContext) -> int:
         update.message.reply_text(
             read_phrase_in_a_language("location_done", context.user_data["language"])
         )
+        """Writes location data  to notion"""
+
         if re.match(gps_regex, update.message.text):
             coordinate_type = "Custom GPS"
             coordinate_url = "https://www.google.com/maps/search/?api=1&query=%s" % (
@@ -508,13 +537,14 @@ def location(update: Update, context: CallbackContext) -> int:
         )
 
     else:
+        """Provides error and asks again for the location"""
+
         update.message.reply_text(
             read_phrase_in_a_language("location_error", context.user_data["language"])
         )
         return LOCATION
-
+    """Sends all the data to s3 and notion and ends the conversation"""
     page = notion.pages.create(**context.user_data["notion_base_page"])
-    print(context.user_data["media_files"])
     for media_file_name in context.user_data["media_files"]:
         print(media_file_name)
         s3_client.upload_file(
