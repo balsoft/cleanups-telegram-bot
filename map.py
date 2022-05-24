@@ -58,7 +58,7 @@ def parse_marker_from_page(page_id, notion=notion):
 
 
 def parse_location_from_yaml(filename):
-    """Just a function for local map debug """
+    """Just a function for local map debug"""
 
     with open(filename, "r") as stream:
         data_loaded = yaml.load(stream, Loader=yaml.FullLoader)
@@ -81,7 +81,7 @@ dirty_colour = "red"
 dirty_edge_colour = "darkred"
 
 
-statuses = ["Clean", "Dirty"] #can be tranformed to feature later
+statuses = ["Clean", "Dirty"]  # can be tranformed to feature later
 notion_static_page_url = os.environ["NOTION_STATIC_PAGE_URL"]
 
 """We parse only pages with statuses that we provide"""

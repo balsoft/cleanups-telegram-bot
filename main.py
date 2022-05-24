@@ -61,7 +61,9 @@ s3_client = session.client(
     endpoint_url=s3_bucket_endpoint,
 )
 boto3.set_stream_logger("boto3.resources", logging.INFO)
-DATA_PATH_PREFIX = os.environ["DATA_PATH_PREFIX"] #dir where to store language file , its tmpfs fir in kuberentes - locally you can set any dir but it should contain /dynamic and /tmpfs subdirs
+DATA_PATH_PREFIX = os.environ[
+    "DATA_PATH_PREFIX"
+]  # dir where to store language file , its tmpfs fir in kuberentes - locally you can set any dir but it should contain /dynamic and /tmpfs subdirs
 S3_FILE_PREFIX = "%s/dynamic" % (DATA_PATH_PREFIX)
 PHRASES_FILE_PREFIX = "%s/tmpfs" % (DATA_PATH_PREFIX)
 PHRASES_FILE = "phrases.yaml"
@@ -139,7 +141,6 @@ def language(update: Update, context: CallbackContext) -> int:
     # print(context.user_data['notion_base_page'])
     """Start constructing notion page for the report """
 
-
     context.user_data["notion_base_page"] = {
         "properties": {
             "Status": {"select": {"name": "Moderation"}},
@@ -164,7 +165,7 @@ def language(update: Update, context: CallbackContext) -> int:
 
 
 def action(update: Update, context: CallbackContext) -> int:
-    """Sets appropriate notion database id for the report. 
+    """Sets appropriate notion database id for the report.
     Right now report formats are the same"""
     if update.message.text in [
         read_phrase_in_a_language("report_dirty_place", lang) for lang in language_list
@@ -193,14 +194,13 @@ def description(update: Update, context: CallbackContext) -> int:
 
     user = update.message.from_user
     # print(update.message)
-    
+
     user_id = str(update.message.chat.id)
     chat_date = str(update.message.date.strftime("%s"))
     report_id = "%s-%s" % (user_id, chat_date)
     report_description = update.message.text
     logger.info("Description of %s: %s", user.first_name, report_description)
-   
-    
+
     """Asks user for media"""
 
     context.user_data["done_button"] = read_phrase_in_a_language(
@@ -253,7 +253,6 @@ def description(update: Update, context: CallbackContext) -> int:
         ]
     )
 
-    
     return MEDIA
 
 
@@ -261,17 +260,16 @@ def media(update: Update, context: CallbackContext) -> int:
     """Upload all the media and asks for location"""
     """Prepares buffer and notion page to upload"""
     context.user_data["media_files"] = []
-    
+
     user_id = str(update.message.chat.id)
     chat_date = str(update.message.date.strftime("%s"))
     print(user_id, chat_date)
     end_message = context.user_data["done_button"]
     reply_keyboard = [[end_message]]
 
-
     if update.message.text:
         if update.message.text == end_message:
-            """When user press done_button bot asks for the location """
+            """When user press done_button bot asks for the location"""
             update.message.reply_text(
                 read_phrase_in_a_language(
                     "location_phrase", context.user_data["language"]
@@ -280,12 +278,12 @@ def media(update: Update, context: CallbackContext) -> int:
             )
             return LOCATION
         else:
-            """When user send text he got and error and is asked to try again """
+            """When user send text he got and error and is asked to try again"""
             update.message.reply_text(
                 read_phrase_in_a_language("media_error", context.user_data["language"])
             )
         return MEDIA
-    else: 
+    else:
         """When correct media is send it got uploaded to the cloud and set to notion"""
         update.message.reply_text(
             read_phrase_in_a_language("wait_for_media", context.user_data["language"]),
