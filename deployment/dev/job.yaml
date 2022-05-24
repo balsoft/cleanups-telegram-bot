@@ -1,0 +1,68 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ecobot-map
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: hello
+        image: cr.yandex/crp5greagvr5ibj796uu/ecobot/telegram-bot
+        imagePullPolicy: IfNotPresent
+        command:
+        - python3
+        - map.py
+        env:
+        - name: MAP_SIZE
+          value: "12"
+        - name: AWS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: bot-secrets
+              key: AWS_KEY
+              optional: false # same as default; "mysecret" must exist
+        - name: AWS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: bot-secrets
+              key: AWS_KEY_ID
+              optional: false # same as default; "mysecret" must exist
+        - name: NOTION_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: bot-secrets
+              key: NOTION_API_KEY
+              optional: false # same as default; "mysecret" must exist
+        - name: TRASH_DB_ID
+          valueFrom:
+            secretKeyRef:
+              name: bot-secrets
+              key: TRASH_DB_ID
+              optional: false # same as default; "mysecret" must exist
+        - name: S3_BUCKET
+          valueFrom:
+            secretKeyRef:
+              name: bot-secrets
+              key: S3_BUCKET
+              optional: false # same as default; "mysecret" must exist
+        - name: GMAP_APIKEY
+          valueFrom:
+            secretKeyRef:
+              name: bot-secrets
+              key: GMAP_APIKEY
+              optional: false # same as default; "mysecret" must exist
+        - name: GMAP_APIKEY
+          valueFrom:
+            secretKeyRef:
+              name: bot-secrets
+              key: GMAP_APIKEY
+              optional: false # same as default; "mysecret" must exist
+        - name: NOTION_STATIC_PAGE_URL
+          valueFrom:
+            secretKeyRef:
+              name: bot-secrets
+              key: NOTION_STATIC_PAGE_URL
+              optional: false # same as default; "mysecret" must exist
+            
+            

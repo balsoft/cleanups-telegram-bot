@@ -5,4 +5,5 @@ resources:
 - secrets.yaml
 - pvc.yaml
 - cronjob.yaml
+- job.yaml
 namespace: telegram-dev-tbilisi
