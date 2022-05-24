@@ -6,6 +6,7 @@ spec:
   schedule: "@hourly"
   jobTemplate:
     spec:
+      backoffLimit: 2
       template:
         spec:
           restartPolicy: Never
