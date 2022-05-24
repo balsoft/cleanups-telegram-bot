@@ -18,7 +18,7 @@ spec:
             - map.py
             env:
             - name: MAP_SIZE
-              value: "12"
+              value: "11"
             - name: MAP_CENTER
               value: "41.726142, 44.818534"
             - name: MAP_NAME

@@ -4,7 +4,7 @@ import boto3
 import os
 import gmplot
 import mimetypes
-
+import json
 
 database_id = os.environ["TRASH_DB_ID"]
 notion = Client(auth=os.environ["NOTION_API_KEY"])
@@ -110,14 +110,29 @@ for status in statuses:
             else:
                 label = "C"
                 colour = clean_colour
+
+            image = ""
+            #print(page_id)
+            # Find the first acceptable image
+            #req = {"block_id": page_id, "page_size": 50}
+            for child in notion.blocks.children.list(page_id)['results']:
+                #print(child)
+                if child["type"] == "image" and child["image"]["type"] ==  "external" :
+                    image = (
+                        "<img src=%s alt='Image of location' height='100' width='140' />"
+                        % (child["image"]['external']['url'])
+                    )
+                    break
+            # If `image' is still empty, we have found no images. No problem, just don't show any!
+
             gmap.marker(
                 marker_loc[0],
                 marker_loc[1],
                 color=colour,
                 title=marker_name,
                 label=label,
-                info_window="%s <br/> reported by %s <br/> <a href='https://%s/%s' target='_blank'>Details</a>"
-                % (marker_name, reporter_by, notion_static_page_url, page_id),
+                info_window="%s<br/> %s <br/>reported by %s <br/> <a href='https://%s/%s' target='_blank'>Details</a>"
+                % (marker_name, image, reporter_by, notion_static_page_url, page_id),
             )
         if page["properties"]["polygon"]["rich_text"] != []:
             """If page contains polygon we parse it"""
