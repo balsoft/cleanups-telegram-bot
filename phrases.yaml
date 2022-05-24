@@ -1,68 +1,101 @@
 language_name:
-  ru:  'Русский'
-  en:  'English'
-  hy:  'Հայերեն'
+  ru: 'Русский'
+  en: 'English'
+  hy: 'Հայերեն'
+  ka: 'ქართული'
+
 open_phrase:
-  ru:  'Привет! Я бот куда ты можешь отправить сообщение о грязном месте. Пожалуйста выбери свой язык'
-  en:  "Hi! I'm a bot to whom you can report places in need of a clean or a litter bin. Please choose your language"
-  hy:  'Ողջու՜յն! Ես բոտ եմ, որտեղ կարող ես զեկուցել աղբահանության կարիք ունեցող վայրի մասին: Խնդրում եm ընտրել լեզուն'
+  ru: 'Привет! Я бот, которому можно отправить сообщение о замусоренном месте. Пожалуйста, выберите язык общения.'
+  en: 'Hi! I am a bot that can help you report a littered area. Please choose your language.'
+  hy: 'Ողջու՜յն! Ես բոտ եմ, որտեղ կարող ես զեկուցել աղբահանության կարիք ունեցող վայրի մասին: Խնդրում եm ընտրել լեզուն'
+  ka: 'გამარჯობათ. მე ვარ ბოტი, რომელსაც შეგიძლიათ გაუგზავნოთ შეტყობინება დანაგვიანებულ ადგილის შესახებ. გთხოვთ აირჩიოთ სასურველი ენა.'
+
 intro_phrase:
-  en: 'I will ask you for a description, photos/videos, and location of the littered place. You can press /cancel anytime to stop the process'
-  ru: 'Я попрошу тебя прислать описание, фото и видео места нуждающегося в уборке или урне. Ты можешь остановить процесс нажав /cancel'
+  en: 'I will ask you for the description, photos/videos and location of the area that requires a clean-up or a trash can to be installed. You can press /cancel at any moment to stop the process.'
+  ru: 'Я попрошу вас прислать описание, фото/видео и координаты места, нуждающегося в уборке или в установке урны. Остановить процесс можно в любой момент, нажав /cancel.'
   hy: 'Ես քեզանից կխնդրեմ նկարագրություն, լուսանկարներ/տեսանյութեր և աղբահանության կարիք ունեցող գտնվելու վայրը: Գործընթացը դադարեցնելու համար ցանկացած պահի կարող ես սեղմել /cancel'
+  ka: 'მე გთხოვთ გამომიგზავნოთ აღწერა, ფოტო და ვიდეო იმ ადგილის, რომელსაც ესაჭირეობა დასუფთავება ან სანაგვე ყუთის დაყენება. პროცესის შესაჩერებლად გთხოვთ გამოიყენოთ ღილაკი /cancel'
+
 report_dirty_place:
-  en: 'Location in need of a clean'
+  en: 'Place to clean'
   ru: 'Место для уборки'
   hy: 'Մաքրելու վայր'
+  ka: 'დასასუფთავებელი ადგილი'
+
 report_place_for_urn:
-  en: 'Location in need of a litter bin'
+  en: 'Place to install a trash can'
   ru: 'Место для урны'
   hy: 'Տեղ աղբամանի համար'
+  ka: 'სანაგვე ყუთის დაყენება'
+
 action_phrase:
-  en:  'What kind of location do you want to report?'
-  ru:  'О каком месте ты хочешь сообщить?'
-  hy:  'Ո՞ր վայրի մասին ես ուզում հայտնել:'
+  en: 'What do you want to report?'
+  ru: 'О чём вы хотите сообщить?'
+  hy: 'Ո՞ր վայրի մասին ես ուզում հայտնել:'
+  ka: 'რის შესახებ გსურთ შეგვატყობინოთ?'
+
 description_phrase:
-  en: 'Please describe in your own words where this location is. E.g. Yerevan, Razdan river bank'
-  ru: 'Пожалуйста напиши где находится место с мусором. Например - Ереван, берег реки раздан'
+  en: 'Please describe where this place is. For instance: Yerevan, Razdan river bank.'
+  ru: 'Пожалуйста, напишите, где находится замусоренное место. Например: Ереван, берег реки Раздан.'
   hy: 'Խնդրում եմ, գրել, թե որտեղ է գտնվում աղբի վայրը։ Օրինակ՝ Երևան, Հրազդան գետի ափ։'
+  ka: 'გთხოვთ დაგვიზუსტოთ, სად მდებარეობს დანაგვიანებული ადგილი. მაგალითად, ერევანი, მდინარე რაზდანის სანაპირო ზოლი.'
+
 done_button:
-  en: 'done'
-  ru: 'готово'
+  en: 'Done'
+  ru: 'Готово'
   hy: 'Կատարված'
+  ka: ''
+
 media_phrase:
-  en:  "Good! Please send me photos or videos of the location. When you're done, wait until I upload all the photos and press 'done'."
-  ru: 'Хорошо! Отправь фото и видео места. Дождись как я загружу все и нажми готово'
+  en: 'Great! Please send me photos/videos of the location. Wait until all files are uploaded. After that, press “Done” to proceed.'
+  ru: 'Хорошо! Отправьте фото и видео места. Дождитесь, пока всё загрузится, и нажмите «Готово».'
   hy: 'Լավ։ Ուղարկիր ինձ տվյալ վայրի լուսանկարներ և տեսանյութեր: Խնդրում եմ սպասել, մինչև ես վերբեռնեմ բոլոր լուսանկարները, հետո սեղմիր «Կատարված»:'
+  ka: 'შესანიშნავია! გთხოვთ გამომიგზავნოთ ფოტო და ვიდეო დანაგვიანებული ადგილის. დაელოდეთ, სანამ ყველა ფაილი აიტვირთება და დააჭირეთ ღილაკს „შესრულებულია“.'
+
 wait_for_media:
-  en: 'Please wait until every media file is uploaded and press done to end the upload process'
-  ru: 'Пожалуйста дождитесь когда каждый файл будет загружен и нажмите готово чтобы завершить процесс'
+  en: 'Please wait until all the files are uploaded and press “Done” to proceed.'
+  ru: 'Пожалуйста, дождитесь пока все файлы загрузятся, и нажмите «Готово», чтобы продолжить.'
   hy: 'Խնդրում եմ սպասել, մինչև յուրաքանչյուր մեդիա ֆայլ վերբեռնվի, հետո սեղմիր «Կատարված»՝ վերբեռնման գործընթացն ավարտելու համար'
+  ka: 'გთხოვთ დაელოდეთ, სანამ ყველა ფაილი აიტვირთება და დააჭირეთ ღილაკს „შესრულებულია“.'
+
 photo_uploaded:
-  en: 'Photo has been uploaded'
-  ru: 'Фото было загружено'
+  en: 'Photo upload is complete.'
+  ru: 'Фото загрузилось.'
   hy: 'Լուսանկարը վերբեռնվել է'
+  ka: 'ფოტო ატვირთულია'
+
 video_uploaded:
-  en: 'Video has been uploaded'
-  ru: 'Видео было загружено'
+  en: 'Video upload is complete.'
+  ru: 'Видео загрузилось.'
   hy: 'Տեսանյութը վերբեռնվել է'
+  ka: 'ვიდეო ატვირთულია'
+
 media_error:
-  en: 'Error - please press done or send me another media'
-  ru: 'Ошибка - пожалуйста нажмите Готово или пришлите еще медиа файлов'
+  en: 'Something went wrong. Please send the files again or press “Done” to skip this step.'
+  ru: 'Что-то пошло не так. Пожалуйста, пришлите файлы ещё раз или нажмите «Готово», чтобы продолжить дальше без них.'
   hy: 'Սխալ. խնդրում եմ սեղմել «Կատարված» է կամ ուղարկել ինձ ուրիշ տեսանյութ'
+  ka: 'რაღაც არასწორია. გთხოვთ გამომიგზავნოთ ფაილები ხელახლა ან დააკლიკეთ „შესრულებულია“ ღილაკს შემდეგ ეტაპზე გადასასვლელად. '
+
 location_phrase:
-  en: 'Great! Now send the geolocation of the place in question. You can share a Telegram location, Google Maps/Yandex Maps link or send a screenshot from your favourite map application'
-  ru: 'Хорошо! Теперь отправь локацию места - ты можешь поделится локацией из телеграм , ссылкой на google/yandex карты или прислать скриншот локации'
+  en: 'Awesome! Now send me the geolocation. The best way is to share the location directly from Telegram, but you may also send a link from Google/Yandex maps or a screenshot of a map with the location.'
+  ru: 'Хорошо! Теперь пришлите геолокацию места. Лучше всего послать её прямо из Телеграма, но можно также прислать ссылку на Google/Yandex карты или скриншот карты с меткой.'
   hy: 'Լավ! Այժմ ուղարկիր ինձ տեղի հասցեն, կարող ես կիսվել Telegram-ից գտնվելու վայրով կամ ուղարկել տեղանքի գտնվելու վայրի սքրինշոթ'
+  ka: 'შესანიშნავია! ეხლა გთხოვთ გამომიგზავნოთ გეოლოკაცია. ამისთვის საუკეთესო გზა არის პირდაპირ ტელეგრამიდან დაშეარება, მაგრამ ასევე შესაძლებელია გამოყენებული იქნას Google/Yandex რუკა ან სქრინშოთი ლოკაციით რუკიდან.'
+
 location_error:
- en: 'Please send me a Telegram location, google/yandex maps link or a screenshot'
- ru: 'Пожалуйста отправь локацию из телеграм илм скриншот локации'
- hy: 'Խնդրում եմ ուղարկել Telegram-ի գտնվելու վայրը կամ գտնվելու վայրի սքրինշոթը'
+  en: 'Please share the location from Telegram or send a screenshot of the map.'
+  ru: 'Пожалуйста, отправьте локацию из Телеграма или пришлите скриншот карты.'
+  hy: 'Խնդրում եմ ուղարկել Telegram-ի գտնվելու վայրը կամ գտնվելու վայրի սքրինշոթը'
+  ka: 'გთხოვთ გამომიგზავნოთ გეოლოკაცია ტელეგრამიდან ან სქრინშოთი ლოკაციით რუკიდან.'
+
 location_done:
- en: 'Great - all done! You have reported a location. Press /start to report another one'
- ru: 'Ура - все готов! Ты отправил локацию. Нажми /start чтобы отправить еще одно место'
- hy: 'Հիանալի է- ամեն ինչ արված է: Դու հայտնել ես գտնվելու վայրի մասին: Կրկին զեկուցելու համար սեղմիր /start'
+  en: 'Good job! Your report is submitted. Press /start to report one more location.'
+  ru: 'Ура, всё готово! Сообщение принято. Нажмите /start, чтобы сообщить о ещё одном месте.'
+  hy: 'Հիանալի է- ամեն ինչ արված է: Դու հայտնել ես գտնվելու վայրի մասին: Կրկին զեկուցելու համար սեղմիր /start'
+  ka: 'ყოჩაღ, ყველაფერი მზადაა. შეტყობინება მიღებულია. გთხოვთ დააჭიროთ /start ღილაკს ახალი შეტყობინებისთვის.'
+
 cancel_phrase:
- en: 'You have cancelled the conversation. Press /start to report again'
- ru: 'Ты прервал разговор. Нажмите /start чтобы запустить еще раз'
- hy: 'Դու չեղարկել ես զրույցը: Կրկին զեկուցելու համար սեղմիր /start'
+  en: 'You have canceled the conversation. Press /start to start reporting again.'
+  ru: 'Вы прервали разговор. Нажмите /start, чтобы начать заново.'
+  hy: 'Դու չեղարկել ես զրույցը: Կրկին զեկուցելու համար սեղմիր /start'
+  ka: 'საუბარს ვწყვეტთ. გთხოვთ დააჭირეთ /start ღილაკს ახალი შეტყობინების გასაგზავნად.'
