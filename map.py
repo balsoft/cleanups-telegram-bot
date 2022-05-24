@@ -112,15 +112,15 @@ for status in statuses:
                 colour = clean_colour
 
             image = ""
-            #print(page_id)
+            # print(page_id)
             # Find the first acceptable image
-            #req = {"block_id": page_id, "page_size": 50}
-            for child in notion.blocks.children.list(page_id)['results']:
-                #print(child)
-                if child["type"] == "image" and child["image"]["type"] ==  "external" :
+            # req = {"block_id": page_id, "page_size": 50}
+            for child in notion.blocks.children.list(page_id)["results"]:
+                # print(child)
+                if child["type"] == "image" and child["image"]["type"] == "external":
                     image = (
                         "<img src=%s alt='Image of location' height='100' width='140' />"
-                        % (child["image"]['external']['url'])
+                        % (child["image"]["external"]["url"])
                     )
                     break
             # If `image' is still empty, we have found no images. No problem, just don't show any!
