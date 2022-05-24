@@ -39,7 +39,7 @@ spec:
           name: tmpfs-volume
         env:
         - name: LANGUAGES
-          value: "en,ru"
+          value: "en,ru,ka"
         - name: ACTIONS
           value: "report_dirty_place"
         - name: AWS_KEY
@@ -86,5 +86,3 @@ spec:
               optional: false # same as default; "mysecret" must exist
         - name: DATA_PATH_PREFIX
           value: "/data"
-        
-        
