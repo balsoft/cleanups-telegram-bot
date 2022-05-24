@@ -50,6 +50,11 @@ if "ACTIONS" in os.environ:
 else:
     action_list = ["report_dirty_place", "report_place_for_urn"]
 
+action_databases = {
+    "report_dirty_place": os.environ.get("TRASH_DB_ID"),
+    "report_place_for_urn": os.environ.get("URN_DB_ID"),
+}
+
 session = boto3.session.Session()
 
 BUCKET = os.environ["S3_BUCKET"]
@@ -70,28 +75,59 @@ PHRASES_FILE = "phrases.yaml"
 
 LANGUAGE, ACTION, DESCRIPTION, MEDIA, LOCATION = range(5)
 
+phrases = yaml.load(open(PHRASES_FILE), Loader=yaml.FullLoader)
 
-def read_phrase_in_a_language(phrase, language):
-    with open(r"%s/%s" % (PHRASES_FILE_PREFIX, PHRASES_FILE)) as file:
 
-        phrase_dict = yaml.load(file, Loader=yaml.FullLoader)
-        return phrase_dict[phrase][language]
+def find_phrase_name(phrase: str, possible=None, languages=None) -> str:
+    """Find a phrase name (e.g. done_button) from a phrase (e.g. "Done")
+    Assumes that all phrases are unique.
+    Optionally, only return one of `possible` phrase names, or search for phrases only in one of `languages`.
+    Raises ValueError if no such phrase is in the phrases file.
+    """
+    for phrase_name in possible or phrases.keys():
+        if phrase in languages or phrases[phrase_name].values():
+            return phrase_name
+    raise ValueError()
+
+
+def reupload_media(media, extension: str, user_id: str, chat_date: str) -> str:
+    """Download media and re-upload it to S3, returning the URL"""
+    random_suffix = "".join(random.choice(string.ascii_lowercase) for i in range(10))
+    file_name = "user_media-%s-%s-%s.%s" % (
+        random_suffix,
+        chat_date,
+        user_id,
+        extension,
+    )
+    path = "%s/%s" % (S3_FILE_PREFIX, file_name)
+    media.download(path)
+    s3_client.upload_file(path, BUCKET, file_name)
+    os.remove(path)
+    return "%s/%s/%s" % (s3_bucket_endpoint, BUCKET, file_name)
 
 
 def start(update: Update, context: CallbackContext) -> int:
-    """Starts the conversation and asks for a language"""
+    """Start the conversation"""
+    context.user_data["user_first_name"] = update.message.chat.first_name
+    context.user_data["user_telegram_username"] = update.message.chat.username
+    context.user_data["chat_date"] = str(update.message.date.strftime("%s"))
 
+    logger.info(
+        "Starting conversation with %s", context.user_data["user_telegram_username"]
+    )
+
+    return request_language(update, context)
+
+
+def request_language(update: Update) -> int:
+    """Ask for user's language"""
     reply_keyboard = [
-        [
-            read_phrase_in_a_language("language_name", language.strip())
-            for language in language_list
-        ]
+        [phrases["language_name"][language.strip()] for language in language_list]
     ]
-    # reply_keyboard = [['Հայերեն', 'Русский', 'English']]
 
     reply_text = ""
     for language in language_list:
-        reply_text += read_phrase_in_a_language("open_phrase", language) + "\n"
+        reply_text += phrases["open_phrase"][language] + "\n"
     update.message.reply_text(
         reply_text,
         reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
@@ -101,311 +137,336 @@ def start(update: Update, context: CallbackContext) -> int:
 
 
 def language(update: Update, context: CallbackContext) -> int:
-    """Sets the language and asks for the action"""
-    """Sets the language """
+    """Save user's language preference"""
+    # TODO: remember the language outside conversations
 
-    language = update.message.text
-    user_name = update.message.chat.first_name
-    user_telegram_url = update.message.chat.username
-    context.user_data["language"] = ""
+    response = update.message.text
 
-    if language == "Հայերեն":
-        context.user_data["language"] = "hy"
-    elif language == "Русский":
-        context.user_data["language"] = "ru"
-    elif language == "English":
-        context.user_data["language"] = "en"
-    elif language == "Georgian":
-        context.user_data["language"] = "ka"
-    """Composes list of available actions"""
-    print(context.user_data["language"])
-    """Creates Action list is set and sends it to user"""
+    try:
+        """Get the language key (e.g. en)
+        corresponding to the language name in the reply (e.g. English)"""
+        context.user_data["language"] = phrases["language_name"].keys()[
+            phrases["language_name"].values().index(response)
+        ]
+    except ValueError:
+        logger.warn("Unknown language %s", response)
+        # TODO: Translate this
+        update.message.reply_text("Unknown language %s, please try again" % response)
+        return request_language(update)
 
-    reply_keyboard = [[]]
-    for action in action_list:
-        reply_keyboard[0].append(
-            read_phrase_in_a_language(action, context.user_data["language"])
-        )
-    # report_keyboard = read_phrase_in_a_language('action_button',context.user_data['language'])
-    # reply_keyboard = [report_keyboard]
-    # print(report_keyboard)
+    lang = context.user_data["language"]
+
+    update.message.reply_text(phrases["intro_phrase"][lang])
+
+    if len(action_list) > 1:
+        return request_action(update, lang)
+    else:
+        return request_description(update, lang)
+
+
+def request_action(update: Update, lang: str) -> int:
+    """Request which action the user wants to take"""
+
+    reply_keyboard = [[phrases[action][lang] for action in action_list]]
 
     update.message.reply_text(
-        read_phrase_in_a_language("intro_phrase", context.user_data["language"])
-    )
-    update.message.reply_text(
-        read_phrase_in_a_language("action_phrase", context.user_data["language"]),
+        phrases["action_phrase"][lang],
         reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
     )
-
-    # print(context.user_data['notion_base_page'])
-    """Start constructing notion page for the report """
-
-    context.user_data["notion_base_page"] = {
-        "properties": {
-            "Status": {"select": {"name": "Moderation"}},
-        },
-        "children": [],
-    }
-
-    context.user_data["notion_base_page"]["properties"]["reported_by"] = {
-        "rich_text": [
-            {
-                "text": {
-                    "content": user_name,
-                    "link": {"url": "https://t.me/%s" % (user_telegram_url)},
-                }
-            }
-        ]
-    }
-
-    print()
 
     return ACTION
 
 
 def action(update: Update, context: CallbackContext) -> int:
-    """Sets appropriate notion database id for the report.
-    Right now report formats are the same"""
-    if update.message.text in [
-        read_phrase_in_a_language("report_dirty_place", lang) for lang in language_list
-    ]:
-        context.user_data["database_id"] = os.environ["TRASH_DB_ID"]
-    elif update.message.text in [
-        read_phrase_in_a_language("report_place_for_urn", lang)
-        for lang in language_list
-    ]:
-        context.user_data["database_id"] = os.environ["URN_DB_ID"]
-    # print(context.user_data)
-    context.user_data["notion_base_page"]["parent"] = {
-        "database_id": context.user_data["database_id"]
-    }
-    """Asks user for the report description"""
+    """Remember which action the user wants to take"""
+
+    response = update.message.text
+    lang = context.user_data["language"]
+
+    try:
+        context.user_data["action"] = find_phrase_name(response, action_list)
+    except ValueError:
+        logger.warn("Unknown action %s", response)
+        update.message.reply_text("Unknown action %s, please try again" % response)
+        return request_action()
+
+    return request_description(update, lang)
+
+
+def request_description(update: Update, lang: str) -> int:
+    """Request a description of the location"""
+
     update.message.reply_text(
-        read_phrase_in_a_language("description_phrase", context.user_data["language"]),
+        phrases["description_phrase"][lang], reply_markup=ReplyKeyboardRemove()
     )
 
     return DESCRIPTION
 
 
 def description(update: Update, context: CallbackContext) -> int:
-    """Sets the decription and asks user for the media"""
-    """Sets the decription"""
+    """Sets the location decription"""
 
-    user = update.message.from_user
-    # print(update.message)
+    response = update.message.text
+    lang = context.user_data["language"]
 
-    user_id = str(update.message.chat.id)
-    chat_date = str(update.message.date.strftime("%s"))
-    report_id = "%s-%s" % (user_id, chat_date)
-    report_description = update.message.text
-    logger.info("Description of %s: %s", user.first_name, report_description)
+    context.user_data["description"] = response
 
-    """Asks user for media"""
+    return request_media(update, lang)
 
-    context.user_data["done_button"] = read_phrase_in_a_language(
-        "done_button", context.user_data["language"]
-    )
+
+def request_media(update: Update, lang: str) -> int:
+    """Ask user to submit media of the location"""
+
     update.message.reply_text(
-        read_phrase_in_a_language("media_phrase", context.user_data["language"])
-        ## reply_markup = ReplyKeyboardMarkup(
-        ##       [KeyboardButton(request_location=True)]
-        ##    )
-    )
-    """Adds description to notion"""
-    context.user_data["notion_base_page"]["properties"]["id"] = {
-        "title": [
-            {"text": {"content": report_description}},
-        ]
-    }
-    context.user_data["notion_base_page"]["children"].extend(
-        [
-            {
-                "object": "block",
-                "type": "heading_2",
-                "heading_2": {
-                    "rich_text": [
-                        {"type": "text", "text": {"content": "Report description"}}
-                    ]
-                },
-            },
-            {
-                "object": "block",
-                "type": "paragraph",
-                "paragraph": {
-                    "rich_text": [
-                        {
-                            "type": "text",
-                            "text": {
-                                "content": report_description,
-                            },
-                        },
-                    ]
-                },
-            },
-            {
-                "object": "block",
-                "type": "heading_2",
-                "heading_2": {
-                    "rich_text": [{"type": "text", "text": {"content": "Report Media"}}]
-                },
-            },
-        ]
+        phrases["media_phrase"][lang],
     )
 
     return MEDIA
 
 
-def media(update: Update, context: CallbackContext) -> int:
-    """Upload all the media and asks for location"""
-    """Prepares buffer and notion page to upload"""
-    context.user_data["media_files"] = []
+def wait_for_media(update: Update, lang: str):
+    """Tell user to wait until media is uploaded"""
+    reply_keyboard = [[phrases["done_button"][lang]]]
+    update.message.reply_text(
+        phrases["wait_for_media"][lang],
+        reply_markup=ReplyKeyboardMarkup(
+            reply_keyboard, input_field_placeholder="Done?"
+        ),
+    )
 
-    user_id = str(update.message.chat.id)
-    chat_date = str(update.message.date.strftime("%s"))
-    print(user_id, chat_date)
-    end_message = context.user_data["done_button"]
-    reply_keyboard = [[end_message]]
+
+def photo_uploaded(update: Update, lang: str) -> int:
+    """Notify user that a photo has been uploaded"""
+    update.message.reply_text(phrases["photo_uploaded"][lang], quote=True)
+    return MEDIA
+
+
+def video_uploaded(update: Update, lang: str) -> int:
+    """Notify user that a video has been uploaded"""
+    update.message.reply_text(phrases["video_uploaded"][lang], quote=True)
+    return MEDIA
+
+
+def media_error(update: Update, lang: str) -> int:
+    """Notify user that there has been an error during media upload"""
+    update.message.reply_text(phrases["media_error"][lang], quote=True)
+    return MEDIA
+
+
+def media(update: Update, context: CallbackContext) -> int:
+    """Receive & upload media from the user, saving the URL"""
+
+    lang = context.user_data["language"]
+    user_telegram_username = context.user_data["user_telegram_username"]
+    chat_date = context.user_data["chat_date"]
+
+    context.user_data["photos"] = []
+    context.user_data["videos"] = []
 
     if update.message.text:
-        if update.message.text == end_message:
-            """When user press done_button bot asks for the location"""
-            update.message.reply_text(
-                read_phrase_in_a_language(
-                    "location_phrase", context.user_data["language"]
-                ),
-                reply_markup=ReplyKeyboardRemove(),
-            )
-            return LOCATION
-        else:
-            """When user send text he got and error and is asked to try again"""
-            update.message.reply_text(
-                read_phrase_in_a_language("media_error", context.user_data["language"])
-            )
-        return MEDIA
-    else:
-        """When correct media is send it got uploaded to the cloud and set to notion"""
-        update.message.reply_text(
-            read_phrase_in_a_language("wait_for_media", context.user_data["language"]),
-            reply_markup=ReplyKeyboardMarkup(
-                reply_keyboard, input_field_placeholder="Done?"
-            ),
-        )
-        if update.message.photo:
-            photo_file = update.message.photo[-1].get_file()
-            random_suffix = "".join(
-                random.choice(string.ascii_lowercase) for i in range(10)
-            )
-            photo_file_name = "user_photo-%s-%s-%s.jpg" % (
-                random_suffix,
-                chat_date,
-                user_id,
-            )
-            photo_file.download("%s/%s" % (S3_FILE_PREFIX, photo_file_name))
-            image_url = "%s/%s/%s" % (s3_bucket_endpoint, BUCKET, photo_file_name)
-            context.user_data["notion_base_page"]["children"].append(
-                {
-                    "object": "block",
-                    "type": "image",
-                    "image": {"type": "external", "external": {"url": image_url}},
-                }
-            )
-            context.user_data["media_files"].append(photo_file_name)
-            #   print(context.user_data['media_files'])
-            update.message.reply_text(
-                read_phrase_in_a_language(
-                    "photo_uploaded", context.user_data["language"]
-                )
-            )
-            return MEDIA
-        if update.message.video:
-            video_file = update.message.video.get_file()
-            random_suffix = "".join(
-                random.choice(string.ascii_lowercase) for i in range(10)
-            )
+        response = update.message.text
 
-            video_file_name = "user_video-%s-%s-%s.mp4" % (
-                random_suffix,
-                chat_date,
-                user_id,
+        try:
+            find_phrase_name(response, ["done_button"])
+        except ValueError:
+            logger.warn("Unknown response: %s", response)
+            return media_error(update, lang)
+
+        return request_location(update, lang)
+    elif update.message.photo:
+        wait_for_media(update, lang)
+
+        context.user_data["photos"].append(
+            reupload_media(
+                update.message.photo, "jpg", user_telegram_username, chat_date
             )
-            video_file.download("%s/%s" % (S3_FILE_PREFIX, video_file_name))
-            video_url = "%s/%s/%s" % (s3_bucket_endpoint, BUCKET, video_file_name)
-            context.user_data["notion_base_page"]["children"].append(
-                {
-                    "object": "block",
-                    "type": "video",
-                    "video": {"type": "external", "external": {"url": video_url}},
-                }
+        )
+
+        return photo_uploaded(update, lang)
+    elif update.message.video:
+        wait_for_media(update, lang)
+
+        context.user_data["videos"].append(
+            reupload_media(
+                update.message.video, "mp4", user_telegram_username, chat_date
             )
-            context.user_data["media_files"].append(video_file_name)
-            update.message.reply_text(
-                read_phrase_in_a_language(
-                    "video_uploaded", context.user_data["language"]
-                )
-            )
-            return MEDIA
+        )
+
+        return video_uploaded(update, lang)
+    else:
+        return media_error(update, lang)
+
+
+def request_location(update: Update, lang: str) -> int:
+    """Request the precise location of the place in question"""
+    update.message.reply_text(
+        phrases["location_phrase"][lang],
+        reply_markup=ReplyKeyboardRemove(),
+    )
+    return LOCATION
+
+
+def location_error(update: Update, lang: str) -> int:
+    """Tell the user there has been an error parsing the location"""
+    update.message.reply_text(phrases["location_error"][lang])
+    return LOCATION
 
 
 def location(update: Update, context: CallbackContext) -> int:
-    """Sets the location and send data to cloud"""
-    user = update.message.from_user
+    """Save the location which the user has sent"""
+
     gps_regex = (
         r"^([-+]?)([\d]{1,2})(((\.)(\d+)(,)))(\s*)(([-+]?)([\d]{1,3})((\.)(\d+))?)$"
     )
     google_regex = r"https://.*goo.gl/.*"
     yandex_regex = r"https://yandex.*"
 
+    lang = context.user_data["language"]
+    user_telegram_username = context.user_data["user_telegram_username"]
+    chat_date = context.user_data["chat_date"]
+
+    context.user_data["location"] = {}
+
     if update.message.location:
         """Stores telegram send location"""
-        user_location_loc = update.message.location
-        context.user_data["notion_base_page"]["children"].append(
-            {
-                "object": "block",
-                "type": "heading_2",
-                "heading_2": {
-                    "rich_text": [
-                        {"type": "text", "text": {"content": "Report Location"}}
-                    ]
-                },
-            },
-        )
-        update.message.reply_text(
-            read_phrase_in_a_language("location_done", context.user_data["language"])
-        )
-        """Writes location data  to notion"""
 
-        logger.info(
-            "Location of %s: %f / %f",
-            user.first_name,
-            user_location_loc.latitude,
-            user_location_loc.longitude,
+        context.user_data["location"]["coordinates"][
+            "lat"
+        ] = update.message.location.latitude
+        context.user_data["location"]["coordinates"][
+            "lon"
+        ] = update.message.location.longitude
+    elif update.message.photo:
+        """Stores location photo"""
+
+        context.user_data["location"]["photo"] = reupload_media(
+            update.message.photo, "jpg", user_telegram_username, chat_date
         )
-        google_maps_url = "https://www.google.com/maps/search/?api=1&query=%s,%s" % (
-            user_location_loc.latitude,
-            user_location_loc.longitude,
+
+    elif update.message.text:
+        """Stores user provided location via text ( gps regexp or yandex/google maps"""
+
+        response = update.message.text
+
+        if re.match(google_regex, response):
+            context.user_data["location"]["link"]["type"] = "Google Maps"
+            context.user_data["location"]["link"]["url"] = re.search(
+                google_regex, response
+            ).group()
+        elif re.match(yandex_regex, response):
+            context.user_data["location"]["link"]["type"] = "Yandex Maps"
+            context.user_data["location"]["link"]["url"] = re.search(
+                yandex_regex, response
+            ).group()
+        else:
+            return location_error(update, lang)
+
+        context.user_data["location"]["link"]["text"] = response
+
+    else:
+        """Provides error and asks again for the location"""
+        return location_error(update, lang)
+
+    return done(update, context)
+
+
+def done(update: Update, context: CallbackContext) -> int:
+    """Upload the report to notion and end the conversation"""
+    push_notion(context.user_data)
+
+    update.message.reply_text(phrases["location_done"][context.user_data["language"]])
+
+    return ConversationHandler.END
+
+
+def push_notion(data):
+    """Prepares and submits a notion page with the report"""
+
+    lang = data["language"]
+
+    reported_by = {
+        "rich_text": [
+            {
+                "text": {
+                    "content": data["user_first_name"],
+                    "link": {
+                        "url": "https://t.me/%s" % (data["user_telegram_username"])
+                    },
+                }
+            }
+        ]
+    }
+
+    page_id = {"title": [{"text": {"content": data["description"]}}]}
+
+    report_description_heading = {
+        "object": "block",
+        "type": "heading_2",
+        "heading_2": {
+            "rich_text": [{"type": "text", "text": {"content": "Report description"}}]
+        },
+    }
+    report_description = (
+        {
+            "object": "block",
+            "type": "paragraph",
+            "paragraph": {
+                "rich_text": [
+                    {
+                        "type": "text",
+                        "text": {
+                            "content": report_description,
+                        },
+                    },
+                ]
+            },
+        },
+    )
+
+    report_media_heading = {
+        "object": "block",
+        "type": "heading_2",
+        "heading_2": {
+            "rich_text": [{"type": "text", "text": {"content": "Report Media"}}]
+        },
+    }
+
+    report_photos = [
+        {
+            "object": "block",
+            "type": "image",
+            "image": {"type": "external", "external": {"url": url}},
+        }
+        for url in data["photos"]
+    ]
+
+    report_videos = [
+        {
+            "object": "block",
+            "type": "video",
+            "image": {"type": "external", "external": {"url": url}},
+        }
+        for url in data["videos"]
+    ]
+
+    location_heading = {
+        "object": "block",
+        "type": "heading_2",
+        "heading_2": {
+            "rich_text": [{"type": "text", "text": {"content": "Report Location"}}]
+        },
+    }
+
+    photo = data["location"]["photo"]
+    coordinates = data["location"]["coordinates"]
+    link = data["location"]["link"]
+
+    if coordinates:
+        location_url = "https://www.google.com/maps/search/?api=1&query=%s,%s" % (
+            coordinates["lat"],
+            coordinates["lon"],
         )
-        context.user_data["notion_base_page"]["properties"]["Location"] = {
-            "rich_text": [
-                {
-                    "text": {
-                        "content": "Telegram Location",
-                        "link": {"url": google_maps_url},
-                    }
-                }
-            ]
-        }
-        context.user_data["notion_base_page"]["properties"]["marker"] = {
-            "rich_text": [
-                {
-                    "text": {
-                        "content": "%s, %s"
-                        % (user_location_loc.latitude, user_location_loc.longitude)
-                    }
-                }
-            ]
-        }
-        context.user_data["notion_base_page"]["children"].append(
+        location_block = {
             {
                 "object": "block",
                 "type": "paragraph",
@@ -416,49 +477,33 @@ def location(update: Update, context: CallbackContext) -> int:
                             "text": {
                                 "content": "%s-%s"
                                 % (
-                                    user_location_loc.latitude,
-                                    user_location_loc.longitude,
+                                    coordinates["lat"],
+                                    coordinates["lon"],
                                 ),
-                                "link": {"url": google_maps_url},
+                                "link": {"url": location_url},
                             },
                         }
                     ],
                 },
             }
-        )
-    elif update.message.photo:
-        """Stores location photo"""
-
-        user_location_text = update.message.text
-        user_id = str(update.message.chat.id)
-        context.user_data["notion_base_page"]["children"].append(
-            {
-                "object": "block",
-                "type": "heading_2",
-                "heading_2": {
-                    "rich_text": [
-                        {"type": "text", "text": {"content": "Report Location"}}
-                    ]
-                },
-            },
-        )
-        chat_date = str(update.message.date.strftime("%s"))
-        update.message.reply_text(
-            read_phrase_in_a_language("location_done", context.user_data["language"])
-        )
-        photo_file = update.message.photo[-1].get_file()
-        random_suffix = "".join(
-            random.choice(string.ascii_lowercase) for i in range(10)
-        )
-
-        photo_file_name = "location_photo-%s-%s-%s.jpg" % (
-            random_suffix,
-            chat_date,
-            user_id,
-        )
-        photo_file.download("%s/%s" % (S3_FILE_PREFIX, photo_file_name))
-        image_url = "%s/%s/%s" % (s3_bucket_endpoint, BUCKET, photo_file_name)
-        context.user_data["notion_base_page"]["properties"]["Location"] = {
+        }
+        location_property = {
+            "rich_text": [
+                {
+                    "text": {
+                        "content": "Telegram Location",
+                        "link": {"url": google_maps_url},
+                    }
+                }
+            ]
+        }
+    elif photo:
+        location_block = {
+            "object": "block",
+            "type": "image",
+            "image": {"type": "external", "external": {"url": photo}},
+        }
+        location_property = {
             "rich_text": [
                 {
                     "text": {
@@ -467,97 +512,67 @@ def location(update: Update, context: CallbackContext) -> int:
                 }
             ]
         }
-        context.user_data["notion_base_page"]["children"].append(
-            {
-                "object": "block",
-                "type": "image",
-                "image": {"type": "external", "external": {"url": image_url}},
-            }
-        )
-        context.user_data["media_files"].append(photo_file_name)
-    elif update.message.text and (
-        re.match(gps_regex, update.message.text)
-        or re.match(google_regex, update.message.text)
-        or re.match(yandex_regex, update.message.text)
-    ):
-        """Stores user provided location via text ( gps regexp or yandex/google maps"""
-
-        context.user_data["notion_base_page"]["children"].append(
-            {
-                "object": "block",
-                "type": "heading_2",
-                "heading_2": {
-                    "rich_text": [
-                        {"type": "text", "text": {"content": "Report Location"}}
-                    ]
-                },
+    elif link:
+        location_block = {
+            "object": "block",
+            "type": "paragraph",
+            "paragraph": {
+                "rich_text": [
+                    {
+                        "type": "text",
+                        "text": {
+                            "content": link["text"],
+                        },
+                    }
+                ]
             },
-        )
-        update.message.reply_text(
-            read_phrase_in_a_language("location_done", context.user_data["language"])
-        )
-        """Writes location data  to notion"""
-
-        if re.match(gps_regex, update.message.text):
-            coordinate_type = "Custom GPS"
-            coordinate_url = "https://www.google.com/maps/search/?api=1&query=%s" % (
-                update.message.text
-            )
-        elif re.match(google_regex, update.message.text):
-            coordinate_type = "Google Maps"
-            google_maps_url = re.search(google_regex, update.message.text)
-            coordinate_url = google_maps_url.group()
-        elif re.match(yandex_regex, update.message.text):
-            coordinate_type = "Yandex Maps"
-            yandex_maps_url = re.search(yandex_regex, update.message.text)
-            coordinate_url = yandex_maps_url.group()
-
-        context.user_data["notion_base_page"]["properties"]["Location"] = {
+        }
+        location_property = {
             "rich_text": [
-                {"text": {"content": coordinate_type, "link": {"url": coordinate_url}}}
+                {"text": {"content": link["type"], "link": {"url": link["url"]}}}
             ]
         }
-        context.user_data["notion_base_page"]["children"].append(
-            {
-                "object": "block",
-                "type": "paragraph",
-                "paragraph": {
-                    "rich_text": [
-                        {
-                            "type": "text",
-                            "text": {
-                                "content": update.message.text,
-                            },
-                        }
-                    ]
-                },
-            }
-        )
 
-    else:
-        """Provides error and asks again for the location"""
+    page = {
+        "parent": {"database_id": action_databases[data["action"]]},
+        "properties": {
+            "Status": {"select": {"name": "Moderation"}},
+            "reported_by": reported_by,
+            "id": page_id,
+            "Location": location_property,
+        },
+        "children": [
+            report_description_heading,
+            report_description,
+            report_media_heading,
+        ]
+        + report_photos
+        + report_videos
+        + [location_heading, location_block],
+    }
 
-        update.message.reply_text(
-            read_phrase_in_a_language("location_error", context.user_data["language"])
-        )
-        return LOCATION
-    """Sends all the data to s3 and notion and ends the conversation"""
-    page = notion.pages.create(**context.user_data["notion_base_page"])
-    for media_file_name in context.user_data["media_files"]:
-        print(media_file_name)
-        s3_client.upload_file(
-            "%s/%s" % (S3_FILE_PREFIX, media_file_name), BUCKET, media_file_name
-        )
+    if coordinates:
+        page["properties"]["marker"] = {
+            "rich_text": [
+                {
+                    "text": {
+                        "content": "%s, %s" % (coordinates["lat"], coordinates["lon"])
+                    }
+                }
+            ]
+        }
 
-    return ConversationHandler.END
+    notion.pages.create(**page)
 
 
 def cancel(update: Update, context: CallbackContext) -> int:
     """Cancels and ends the conversation."""
-    user = update.message.from_user
-    logger.info("User %s canceled the conversation.", user.first_name)
+    logger.info(
+        "User %s canceled the conversation.",
+        context.user_data["user_telegram_username"],
+    )
     update.message.reply_text(
-        read_phrase_in_a_language("cancel_phrase", context.user_data["language"]),
+        phrases["cancel_phrase"][context.user_data["language"]],
         reply_markup=ReplyKeyboardRemove(),
     )
     logger.info(context.user_data)
@@ -569,14 +584,11 @@ def main() -> None:
     """Run the bot."""
     # Create the Updater and pass it your bot's token.
     updater = Updater(token=TELEGRAM_TOKEN, use_context=True)
-    shutil.copyfile(
-        r"%s" % (PHRASES_FILE), r"%s/%s" % (PHRASES_FILE_PREFIX, PHRASES_FILE)
-    )
 
     # Get the dispatcher to register handlers
     dispatcher = updater.dispatcher
 
-    # Add conversation handler with the states GENDER, PHOTO, LOCATION and BIO
+    # Conversation handler is a state machine
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("start", start)],
         states={
