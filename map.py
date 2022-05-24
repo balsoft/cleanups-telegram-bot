@@ -119,8 +119,8 @@ for status in statuses:
                 # print(child)
                 if child["type"] == "image" and child["image"]["type"] == "external":
                     image = (
-                        "<img src=%s alt='Image of location' height='100' width='140' />"
-                        % (child["image"]["external"]["url"])
+                        "<img src=%s alt='Image of location' style='position: relative; padding: 0px; margin-right: 10px; max-height: 200px; width=100%;' /> <br/>"
+                        % child["image"]["external"]["url"]
                     )
                     break
             # If `image' is still empty, we have found no images. No problem, just don't show any!
