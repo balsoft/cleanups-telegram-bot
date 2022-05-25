@@ -99,3 +99,9 @@ cancel_phrase:
   ru: 'Вы прервали разговор. Нажмите /start, чтобы начать заново.'
   hy: 'Դու չեղարկել ես զրույցը: Կրկին զեկուցելու համար սեղմիր /start'
   ka: 'საუბარს ვწყვეტთ. გთხოვთ დააჭირეთ /start ღილაკს ახალი შეტყობინების გასაგზავნად.'
+
+something_went_wrong:
+  en: "Something went wrong while uploading your report. Here is the technical information:\n%s"
+  ru: "В процессе загрузки вашего сообщения что-то пошло не так. Вот подробности:\n%s"
+  hy: "Something went wrong while uploading your report. Here is the technical information:\n%s"
+  ka: "Something went wrong while uploading your report. Here is the technical information:\n%s"

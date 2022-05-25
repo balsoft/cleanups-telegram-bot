@@ -86,6 +86,7 @@ if "LANGUAGES" in os.environ:
         language.strip() for language in os.environ["LANGUAGES"].split(",")
     ]
 
+
 def find_phrase_name(phrase: str, possible=None) -> str:
     """Find a phrase name (e.g. done_button) from a phrase (e.g. "Done")
     Assumes that all phrases are unique.
@@ -214,7 +215,9 @@ def request_language(update: Update, context: CallbackContext) -> int:
         for lang in language_list:
             update.message.reply_text(
                 phrases["open_phrase"][lang],
-                reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
+                reply_markup=ReplyKeyboardMarkup(
+                    reply_keyboard, one_time_keyboard=True
+                ),
             )
 
         return LANGUAGE
@@ -222,7 +225,6 @@ def request_language(update: Update, context: CallbackContext) -> int:
 
 def language(update: Update, context: CallbackContext) -> int:
     """Save user's language preference"""
-    # TODO: remember the language outside conversations
 
     response = update.message.text
 
@@ -464,19 +466,17 @@ def location(update: Update, context: CallbackContext) -> int:
 def done(update: Update, context: CallbackContext) -> int:
     """Upload the report to notion and end the conversation"""
 
+    lang = context.user_data["language"]
+
     try:
         push_notion(context.user_data)
         create_or_update_preferences(context.user_data)
     except BaseException as exp:
         # TODO translate
-        update.message.reply_text(
-            "Something went wrong while uploading your report. Here is the technical information:\n%s"
-            % exp
-        )
+        logger.warning("Generating the report failed:\n%s", exp)
+        update.message.reply_text(phrases["something_went_wrong"][lang] % exp)
     else:
-        update.message.reply_text(
-            phrases["location_done"][context.user_data["language"]]
-        )
+        update.message.reply_text(phrases["location_done"][lang])
 
     return ConversationHandler.END
 
