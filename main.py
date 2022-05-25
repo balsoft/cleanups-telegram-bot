@@ -86,7 +86,6 @@ if "LANGUAGES" in os.environ:
         language.strip() for language in os.environ["LANGUAGES"].split(",")
     ]
 
-
 def find_phrase_name(phrase: str, possible=None) -> str:
     """Find a phrase name (e.g. done_button) from a phrase (e.g. "Done")
     Assumes that all phrases are unique.
@@ -181,6 +180,9 @@ def start(update: Update, context: CallbackContext) -> int:
     # Fetch preferences and set context accordingly
 
     fetch_preferences_to_userdata(context.user_data)
+
+    if len(language_list) == 1:
+        context.user_data["language"] = language_list[0]
 
     # Set action list
 
@@ -676,7 +678,7 @@ def cancel(update: Update, context: CallbackContext) -> int:
         context.user_data["user_telegram_username"],
     )
     update.message.reply_text(
-        phrases["cancel_phrase"][context.user_data["language"]],
+        phrases["cancel_phrase"][context.user_data.get("language") or "en"],
         reply_markup=ReplyKeyboardRemove(),
     )
     logger.info(context.user_data)
