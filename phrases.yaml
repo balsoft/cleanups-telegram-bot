@@ -5,8 +5,8 @@ language_name:
   ka: 'ქართული'
 
 open_phrase:
-  ru: 'Привет! Я бот, которому можно отправить сообщение о замусоренном месте. Пожалуйста, выберите язык общения.'
-  en: 'Hi! I am a bot that can help you report a littered area. Please choose your language.'
+  ru: 'Привет! Я бот, которому можно отправить сообщение о замусоренном месте. Пожалуйста, выберите язык общения. Если вы ошиблись с выбором, нажмите /reset'
+  en: "Hi! I am a bot that can help you report a littered area. Please choose your language. If you've chosen a language by mistake, press /reset"
   hy: 'Ողջու՜յն! Ես բոտ եմ, որտեղ կարող ես զեկուցել աղբահանության կարիք ունեցող վայրի մասին: Խնդրում եm ընտրել լեզուն'
   ka: 'გამარჯობათ. მე ვარ ბოტი, რომელსაც შეგიძლიათ გაუგზავნოთ შეტყობინება დანაგვიანებულ ადგილის შესახებ. გთხოვთ აირჩიოთ სასურველი ენა.'
 
