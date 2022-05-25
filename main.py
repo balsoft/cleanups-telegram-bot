@@ -168,6 +168,7 @@ def start(update: Update, context: CallbackContext) -> int:
     context.user_data["user_first_name"] = update.message.chat.first_name
     context.user_data["user_telegram_username"] = update.message.chat.username
     context.user_data["chat_date"] = str(update.message.date.strftime("%s"))
+    context.user_data["action"] = None
     context.user_data["description"] = None
     context.user_data["photos"] = []
     context.user_data["videos"] = []
