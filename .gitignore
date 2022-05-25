@@ -2,3 +2,4 @@
 ./google_maps
 data/
 *.html
+__pycache__/
