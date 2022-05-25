@@ -8,7 +8,7 @@ open_phrase:
   ru: 'Привет! Я бот, которому можно отправить сообщение о замусоренном месте. Пожалуйста, выберите язык общения. Если вы ошиблись с выбором, нажмите /reset'
   en: "Hi! I am a bot that can help you report a littered area. Please choose your language. If you've chosen a language by mistake, press /reset"
   hy: 'Ողջու՜յն! Ես բոտ եմ, որտեղ կարող ես զեկուցել աղբահանության կարիք ունեցող վայրի մասին: Խնդրում եm ընտրել լեզուն'
-  ka: 'გამარჯობათ. მე ვარ ბოტი, რომელსაც შეგიძლიათ გაუგზავნოთ შეტყობინება დანაგვიანებულ ადგილის შესახებ. გთხოვთ აირჩიოთ სასურველი ენა.'
+  ka: 'გამარჯობათ. მე ვარ ბოტი, რომელსაც შეგიძლიათ გაუგზავნოთ შეტყობინება დანაგვიანებული ადგილის შესახებ. გთხოვთ აირჩიოთ სასურველი ენა.'
 
 intro_phrase:
   en: 'I will ask you for the description, photos/videos and location of the area that requires a clean-up or a trash can to be installed. You can press /cancel at any moment to stop the process.'
@@ -44,7 +44,7 @@ done_button:
   en: 'Done'
   ru: 'Готово'
   hy: 'Կատարված'
-  ka: ''
+  ka: 'შესრულებულია'
 
 media_phrase:
   en: 'Great! Please send me photos/videos of the location. Wait until all files are uploaded. After that, press “Done” to proceed.'
