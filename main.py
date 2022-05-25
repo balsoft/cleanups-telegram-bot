@@ -115,7 +115,7 @@ def language(update: Update, context: CallbackContext) -> int:
         context.user_data["language"] = "ru"
     elif language == "English":
         context.user_data["language"] = "en"
-    elif language == "Georgian":
+    elif language == "ქართული":
         context.user_data["language"] = "ka"
     """Composes list of available actions"""
     print(context.user_data["language"])
