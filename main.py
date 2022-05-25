@@ -210,12 +210,10 @@ def request_language(update: Update, context: CallbackContext) -> int:
 
         reply_text = ""
         for lang in language_list:
-            reply_text += phrases["open_phrase"][lang] + "\n"
-
-        update.message.reply_text(
-            reply_text,
-            reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
-        )
+            update.message.reply_text(
+                phrases["open_phrase"][lang],
+                reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
+            )
 
         return LANGUAGE
 
