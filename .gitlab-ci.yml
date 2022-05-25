@@ -52,7 +52,7 @@ build_to_stage:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: always
     - if: $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
-      when: manual
+      when: never
 
 
 
@@ -70,4 +70,8 @@ build_to_prod:
       --context "${CI_PROJECT_DIR}"
       --dockerfile "${CI_PROJECT_DIR}/Dockerfile"
       --destination "${PROD_CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}:0.0.${CI_PIPELINE_ID}"
-  when: manual
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: always
+    - if: $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
+      when: manual
