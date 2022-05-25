@@ -1,6 +1,7 @@
 stages:          # List of stages for jobs, and their order of execution
   - lint
   - build_to_dev
+  - build_to_stage
   - build_to_prod
 
 check_formatting:
@@ -10,6 +11,8 @@ check_formatting:
   script:
     - black --check ${CI_PROJECT_DIR}
 
+
+
 build_to_dev:
   stage: build_to_dev
   image:
@@ -17,13 +20,40 @@ build_to_dev:
     entrypoint: [""]
   before_script:
     - mkdir -p /kaniko/.docker
-    - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "$(echo -n ${CI_REGISTRY_PASSWORD} | base64 -d)" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
+    - echo "{\"auths\":{\"${DEV_CI_REGISTRY}\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "$(echo -n ${CI_REGISTRY_PASSWORD} | base64 -d)" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
   script:
     - >-
       /kaniko/executor
       --context "${CI_PROJECT_DIR}"
       --dockerfile "${CI_PROJECT_DIR}/Dockerfile"
-      --destination "${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}:0.0.${CI_PIPELINE_ID}"
+      --destination "${DEV_CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}:0.0.${CI_PIPELINE_ID}"
+  rules:
+    - if: $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
+      when: always
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: never
+
+
+build_to_stage:
+  stage: build_to_stage
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  before_script:
+    - mkdir -p /kaniko/.docker
+    - echo "{\"auths\":{\"${STAGE_CI_REGISTRY}\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "$(echo -n ${CI_REGISTRY_PASSWORD} | base64 -d)" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
+  script:
+    - >-
+      /kaniko/executor
+      --context "${CI_PROJECT_DIR}"
+      --dockerfile "${CI_PROJECT_DIR}/Dockerfile"
+      --destination "${STAGE_CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}:0.0.${CI_PIPELINE_ID}"
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: always
+    - if: $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
+      when: manual
+
 
 
 build_to_prod:
