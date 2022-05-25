@@ -343,6 +343,10 @@ def media_error(update: Update, lang: str) -> int:
     update.message.reply_text(phrases["media_error"][lang], quote=True)
     return MEDIA
 
+def media_required(update: Update, lang: str) -> int:
+    """Tell the user to submit at least one photo or video"""
+    update.message.reply_text(phrases["media_required"][lang])
+    return MEDIA
 
 def media(update: Update, context: CallbackContext) -> int:
     """Receive & upload media from the user, saving the URL"""
@@ -357,7 +361,10 @@ def media(update: Update, context: CallbackContext) -> int:
 
             find_phrase_name(response, ["done_button"])
 
-            return request_location(update, lang)
+            if len(context.user_data["photos"]) + len(context.user_data["videos"]) > 0:
+                return request_location(update, lang)
+            else:
+                return media_required(update, lang)
 
         if update.message.photo:
             wait_for_media(update, lang)

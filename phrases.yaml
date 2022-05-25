@@ -76,6 +76,13 @@ media_error:
   hy: 'Սխալ. խնդրում եմ սեղմել «Կատարված» է կամ ուղարկել ինձ ուրիշ տեսանյութ'
   ka: 'რაღაც არასწორია. გთხოვთ გამომიგზავნოთ ფაილები ხელახლა ან დააკლიკეთ „შესრულებულია“ ღილაკს შემდეგ ეტაპზე გადასასვლელად. '
 
+media_required:
+  en: 'You must send at least one photo or video of the location'
+  ru: 'Необходимо отправить хотя бы одно фото или видео места'
+  hy: 'You must send at least one photo or video of the location'
+  ka: 'You must send at least one photo or video of the location'
+
+
 location_phrase:
   en: 'Awesome! Now send me the geolocation. The best way is to share the location directly from Telegram, but you may also send a link from Google/Yandex maps or a screenshot of a map with the location.'
   ru: 'Хорошо! Теперь пришлите геолокацию места. Лучше всего послать её прямо из Телеграма, но можно также прислать ссылку на Google/Yandex карты или скриншот карты с меткой.'
