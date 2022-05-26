@@ -84,7 +84,9 @@ for page in pages["results"]:
     for prop in page["properties"]:
         if prop != "phrase_name":
             translations[prop] = page["properties"][prop]["rich_text"][0]["plain_text"]
-    phrases[page["properties"]["phrase_name"]["title"][0]["text"]["content"]] = translations
+    phrases[
+        page["properties"]["phrase_name"]["title"][0]["text"]["content"]
+    ] = translations
 
 language_list = list(phrases["language_name"].keys())
 if "LANGUAGES" in os.environ:
@@ -349,10 +351,12 @@ def media_error(update: Update, lang: str) -> int:
     update.message.reply_text(phrases["media_error"][lang], quote=True)
     return MEDIA
 
+
 def media_required(update: Update, lang: str) -> int:
     """Tell the user to submit at least one photo or video"""
     update.message.reply_text(phrases["media_required"][lang])
     return MEDIA
+
 
 def media(update: Update, context: CallbackContext) -> int:
     """Receive & upload media from the user, saving the URL"""
