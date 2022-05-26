@@ -88,6 +88,8 @@ for page in pages["results"]:
         page["properties"]["phrase_name"]["title"][0]["text"]["content"]
     ] = translations
 
+logger.debug(yaml.dump(phrases))
+
 language_list = list(phrases["language_name"].keys())
 if "LANGUAGES" in os.environ:
     language_list = [
