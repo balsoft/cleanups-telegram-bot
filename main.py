@@ -77,8 +77,14 @@ PHRASES_FILE = "phrases.yaml"
 
 LANGUAGE, ACTION, DESCRIPTION, MEDIA, LOCATION = range(5)
 
-with open(PHRASES_FILE, encoding="UTF-8") as file:
-    phrases = yaml.load(file, Loader=yaml.FullLoader)
+pages = notion.databases.query(**{"database_id": os.environ["TRANSLATIONS_DB_ID"]})
+phrases = {}
+for page in pages["results"]:
+    translations = {}
+    for prop in page["properties"]:
+        if prop != "phrase_name":
+            translations[prop] = page["properties"][prop]["rich_text"][0]["plain_text"]
+    phrases[page["properties"]["phrase_name"]["title"][0]["text"]["content"]] = translations
 
 language_list = list(phrases["language_name"].keys())
 if "LANGUAGES" in os.environ:
@@ -165,7 +171,7 @@ def reset_preferences(user: str):
 def start(update: Update, context: CallbackContext) -> int:
     """Start the conversation"""
 
-    context.user_data["user_first_name"] = update.message.chat.first_name
+    context.user_data["user_full_name"] = update.message.chat.full_name
     context.user_data["user_telegram_username"] = update.message.chat.username
     context.user_data["chat_date"] = str(update.message.date.strftime("%s"))
     context.user_data["action"] = None
@@ -497,7 +503,7 @@ def push_notion(data):
         "rich_text": [
             {
                 "text": {
-                    "content": data["user_first_name"],
+                    "content": data["user_full_name"],
                     "link": {"url": "https://t.me/%s" % data["user_telegram_username"]},
                 }
             }
