@@ -500,7 +500,8 @@ def done(update: Update, context: CallbackContext) -> int:
 
     try:
         push_notion(context.user_data)
-        create_or_update_preferences(context.user_data)
+        if context.user_data["user_telegram_username"] != None:
+            create_or_update_preferences(context.user_data)
     except BaseException as exp:
         # TODO translate
         logger.warning("Generating the report failed:\n%s", exp)
