@@ -246,7 +246,7 @@ def language(update: Update, context: CallbackContext) -> int:
         # TODO: Translate this
         update.message.reply_text("Unknown language %s, please try again" % response)
         return request_language(update, context)
-    
+
     if update.message.chat.username != None:
         create_or_update_preferences(context.user_data)
 
