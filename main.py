@@ -583,7 +583,7 @@ def push_notion(data):
     if coordinates:
         location_url = "https://www.google.com/maps/search/?api=1&query=%s,%s" % (
             coordinates["lat"],
-            coordinates["lon"],
+            coordinates["lon"],  #
         )
         location_block = {
             "object": "block",
