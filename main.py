@@ -189,7 +189,7 @@ def start(update: Update, context: CallbackContext) -> int:
         "Starting conversation with %s", context.user_data["user_telegram_username"]
         )
 
-        # Fetch preferences and set context accordingly
+        # Fetch preferences and set context accordingly fix
 
         fetch_preferences_to_userdata(context.user_data)
 
