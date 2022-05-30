@@ -124,10 +124,7 @@ def find_preferences_page(user: str):
     if PREFERENCES_DB:
         fltr = {
             "database_id": PREFERENCES_DB,
-            "filter": {
-                "property": "username",
-                "title": {"equals": user},
-            },
+            "filter": {"property": "username", "title": {"equals": user},},
         }
         for page in notion.databases.query(**fltr)["results"]:
             return page
@@ -314,9 +311,7 @@ def description(update: Update, context: CallbackContext) -> int:
 def request_media(update: Update, lang: str) -> int:
     """Ask user to submit media of the location"""
 
-    update.message.reply_text(
-        phrases["media_phrase"][lang],
-    )
+    update.message.reply_text(phrases["media_phrase"][lang],)
 
     return MEDIA
 
@@ -329,9 +324,7 @@ def media_markup(lang: str):
 
 def wait_for_media(update: Update, lang: str):
     """Tell user to wait until media is uploaded"""
-    update.message.reply_text(
-        phrases["wait_for_media"][lang],
-    )
+    update.message.reply_text(phrases["wait_for_media"][lang],)
 
 
 def photo_uploaded(update: Update, lang: str) -> int:
@@ -414,8 +407,7 @@ def media(update: Update, context: CallbackContext) -> int:
 def request_location(update: Update, lang: str) -> int:
     """Request the precise location of the place in question"""
     update.message.reply_text(
-        phrases["location_phrase"][lang],
-        reply_markup=ReplyKeyboardRemove(),
+        phrases["location_phrase"][lang], reply_markup=ReplyKeyboardRemove(),
     )
     return LOCATION
 
@@ -531,15 +523,7 @@ def push_notion(data):
             ]
         }
     else:
-        reported_by = {
-            "rich_text": [
-                {
-                    "text": {
-                        "content": data["user_full_name"],
-                    }
-                }
-            ]
-        }
+        reported_by = {"rich_text": [{"text": {"content": data["user_full_name"],}}]}
 
     page_id = {"title": [{"text": {"content": data["description"]}}]}
 
@@ -554,12 +538,7 @@ def push_notion(data):
         "object": "block",
         "type": "paragraph",
         "paragraph": {
-            "rich_text": [
-                {
-                    "type": "text",
-                    "text": {"content": data["description"]},
-                },
-            ]
+            "rich_text": [{"type": "text", "text": {"content": data["description"]},},]
         },
     }
 
@@ -584,7 +563,7 @@ def push_notion(data):
         {
             "object": "block",
             "type": "video",
-            "image": {"type": "external", "external": {"url": url}},
+            "video": {"type": "external", "external": {"url": url}},
         }
         for url in data["videos"]
     ]
@@ -615,10 +594,7 @@ def push_notion(data):
                         "type": "text",
                         "text": {
                             "content": "%s-%s"
-                            % (
-                                coordinates["lat"],
-                                coordinates["lon"],
-                            ),
+                            % (coordinates["lat"], coordinates["lon"],),
                             "link": {"url": location_url},
                         },
                     }
@@ -641,28 +617,13 @@ def push_notion(data):
             "type": "image",
             "image": {"type": "external", "external": {"url": photo}},
         }
-        location_property = {
-            "rich_text": [
-                {
-                    "text": {
-                        "content": "Image in a page",
-                    }
-                }
-            ]
-        }
+        location_property = {"rich_text": [{"text": {"content": "Image in a page",}}]}
     elif link:
         location_block = {
             "object": "block",
             "type": "paragraph",
             "paragraph": {
-                "rich_text": [
-                    {
-                        "type": "text",
-                        "text": {
-                            "content": link["text"],
-                        },
-                    }
-                ]
+                "rich_text": [{"type": "text", "text": {"content": link["text"],},}]
             },
         }
         location_property = {
