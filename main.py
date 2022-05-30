@@ -184,13 +184,16 @@ def start(update: Update, context: CallbackContext) -> int:
     context.user_data["videos"] = []
     context.user_data["location"] = {}
 
-    logger.info(
+    if update.message.chat.username != None:
+        logger.info(
         "Starting conversation with %s", context.user_data["user_telegram_username"]
-    )
+        )
 
-    # Fetch preferences and set context accordingly
+        # Fetch preferences and set context accordingly
 
-    fetch_preferences_to_userdata(context.user_data)
+        fetch_preferences_to_userdata(context.user_data)
+
+    
 
     if len(language_list) == 1:
         context.user_data["language"] = language_list[0]
