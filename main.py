@@ -366,7 +366,11 @@ def media(update: Update, context: CallbackContext) -> int:
     """Receive & upload media from the user, saving the URL"""
 
     lang = context.user_data["language"]
-    user_telegram_username = context.user_data["user_telegram_username"]
+    if context.user_data["user_telegram_username"] != None:
+
+        user_telegram_username = context.user_data["user_telegram_username"]
+    else:
+        user_telegram_username = context.user_data["user_full_name"]
     chat_date = context.user_data["chat_date"]
 
     try:
@@ -430,7 +434,12 @@ def location(update: Update, context: CallbackContext) -> int:
     yandex_regex = r"https://yandex.*"
 
     lang = context.user_data["language"]
-    user_telegram_username = context.user_data["user_telegram_username"]
+    if context.user_data["user_telegram_username"] != None:
+
+        user_telegram_username = context.user_data["user_telegram_username"]
+    else:
+        user_telegram_username = context.user_data["user_full_name"]
+
     chat_date = context.user_data["chat_date"]
 
     if update.message.location:
@@ -507,16 +516,29 @@ def push_notion(data):
 
     logger.debug(yaml.dump(data))
 
-    reported_by = {
-        "rich_text": [
-            {
-                "text": {
-                    "content": data["user_full_name"],
-                    "link": {"url": "https://t.me/%s" % data["user_telegram_username"]},
+    if data["user_telegram_username"] != None:
+        reported_by = {
+            "rich_text": [
+                {
+                    "text": {
+                        "content": data["user_full_name"],
+                        "link": {
+                            "url": "https://t.me/%s" % data["user_telegram_username"]
+                        },
+                    }
                 }
-            }
-        ]
-    }
+            ]
+        }
+    else:
+        reported_by = {
+            "rich_text": [
+                {
+                    "text": {
+                        "content": data["user_full_name"],
+                    }
+                }
+            ]
+        }
 
     page_id = {"title": [{"text": {"content": data["description"]}}]}
 
