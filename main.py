@@ -131,7 +131,7 @@ def find_preferences_page(user: str):
 
 
 def fetch_preferences_to_userdata(data):
-    page = find_preferences_page(data["user_telegram_username"])
+    page = find_preferences_page(data["user_id"])
     if page:
         logger.debug("Fetched user preferences: \n%s", yaml.dump(page))
         lang = page["properties"].get("language")
@@ -143,10 +143,10 @@ def fetch_preferences_to_userdata(data):
 
 def create_or_update_preferences(data):
     if PREFERENCES_DB:
-        page = find_preferences_page(data["user_telegram_username"])
+        page = find_preferences_page(data["user_id"])
         properties = {
             "username": {
-                "title": [{"text": {"content": data["user_telegram_username"]}}]
+                "title": [{"text": {"content": data["user_id"]}}]
             },
             "language": {"select": {"name": data["language"]}},
         }
@@ -174,6 +174,7 @@ def start(update: Update, context: CallbackContext) -> int:
 
     context.user_data["user_full_name"] = update.message.chat.full_name
     context.user_data["user_telegram_username"] = update.message.chat.username
+    context.user_data["user_id"] = str(update.message.chat.id)
     context.user_data["chat_date"] = str(update.message.date.strftime("%s"))
     context.user_data["action"] = None
     context.user_data["description"] = None
@@ -181,14 +182,13 @@ def start(update: Update, context: CallbackContext) -> int:
     context.user_data["videos"] = []
     context.user_data["location"] = {}
 
-    if update.message.chat.username != None:
-        logger.info(
-            "Starting conversation with %s", context.user_data["user_telegram_username"]
-        )
+    logger.info(
+        "Starting conversation with %s", context.user_data["user_telegram_username"]
+    )
 
-        # Fetch preferences and set context accordingly fix
+    # Fetch preferences and set context accordingly
 
-        fetch_preferences_to_userdata(context.user_data)
+    fetch_preferences_to_userdata(context.user_data)
 
     if len(language_list) == 1:
         context.user_data["language"] = language_list[0]
@@ -667,7 +667,7 @@ def push_notion(data):
 
 
 def reset(update: Update, context: CallbackContext) -> int:
-    reset_preferences(update.message.chat.username)
+    reset_preferences(update.message.chat.id)
     context.user_data["language"] = None
     update.message.reply_text(
         "Your preferences have been reset. Press /start to report a location."
