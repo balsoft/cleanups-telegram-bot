@@ -99,7 +99,8 @@ for status in statuses:
 
             print(page["properties"]["id"]["title"][0]["plain_text"])
             marker_loc = parse_marker_from_page(page_id)
-            marker_name = page["properties"]["id"]["title"][0]["plain_text"]
+            description = page["properties"]["id"]["title"][0]["plain_text"]
+            marker_name = description.split("\n")[0]
             reporter_by = page["properties"]["reported_by"]["rich_text"][0][
                 "plain_text"
             ]
@@ -132,7 +133,7 @@ for status in statuses:
                 title=marker_name,
                 label=label,
                 info_window="%s<br/> %s <br/>reported by %s <br/> <a href='https://%s/%s' target='_blank'>Details</a>"
-                % (marker_name, image, reporter_by, notion_static_page_url, page_id),
+                % (description, image, reporter_by, notion_static_page_url, page_id),
             )
         if page["properties"]["polygon"]["rich_text"] != []:
             """If page contains polygon we parse it"""
