@@ -33,9 +33,7 @@
     systemd.services.cleanups-telegram-bot = with cfg;
       lib.mkIf enable {
         preStart = "mkdir ${dataPathPrefix}/{tmpf,dynamic}";
-        script = "cleanups-telegram-bot";
         wantedBy = [ "multi-user.target" ];
-        path = [ package ];
         environment = {
           LOGLEVEL = loglevel;
           TRASH_DB_ID = trashDb;
@@ -49,6 +47,7 @@
           LANGUAGES = builtins.concatStringsSep "," languages;
         };
         serviceConfig = {
+          ExecStart = "${package}/bin/cleanups-telegram-bot";
           EnvironmentFile = secretsFile;
           PrivateTmp = true;
         };

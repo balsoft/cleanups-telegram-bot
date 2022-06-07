@@ -37,9 +37,7 @@
   config = with config.cleanups.map;
     lib.mkIf enable {
       systemd.services.cleanups-map = {
-        script = "cleanups-map";
         wantedBy = [ "multi-user.target" ];
-        path = [ package ];
         environment = {
           LOGLEVEL = loglevel;
           TRASH_DB_ID = trashDb;
@@ -51,6 +49,7 @@
           NOTION_STATIC_PAGE_URL = notionStaticPageUrl;
         };
         serviceConfig = {
+          ExecStart = "${package}/bin/cleanups-map";
           EnvironmentFile = secretsFile;
           Type = "oneshot";
         };

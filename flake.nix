@@ -41,9 +41,9 @@
           ]);
 
         bot = pkgs.writeShellScriptBin "cleanups-telegram-bot"
-          "${python3}/bin/python3 ${./main.py}";
+          "exec ${python3}/bin/python3 ${./main.py}";
         map = pkgs.writeShellScriptBin "cleanups-map"
-          "${python3}/bin/python3 ${./map.py}";
+          "exec ${python3}/bin/python3 ${./map.py}";
 
       in {
         packages = {
