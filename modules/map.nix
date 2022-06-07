@@ -59,8 +59,6 @@
         timerConfig = {
           OnCalendar = interval;
           Unit = "cleanups-map.service";
-          DynamicUser = true;
-          User = "tbilisi-cleanups";
         };
       };
     };

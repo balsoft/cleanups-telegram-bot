@@ -51,8 +51,6 @@
         serviceConfig = {
           EnvironmentFile = secretsFile;
           PrivateTmp = true;
-          DynamicUser = true;
-          User = "tbilisi-cleanups";
         };
       };
   };
