@@ -1,6 +1,0 @@
-.git
-.dockerignore
-deployment
-Dockerfile
-./data
-./deployment
