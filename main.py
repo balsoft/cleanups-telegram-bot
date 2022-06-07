@@ -83,10 +83,14 @@ for page in pages["results"]:
     translations = {}
     for prop in page["properties"]:
         if prop != "phrase_name":
-            translations[prop] = page["properties"][prop]["rich_text"][0]["plain_text"]
-    phrases[
-        page["properties"]["phrase_name"]["title"][0]["text"]["content"]
-    ] = translations
+            if len(page["properties"][prop]["rich_text"]) > 0:
+                translations[prop] = page["properties"][prop]["rich_text"][0]["plain_text"]
+            else:
+                logger.warning(f"Missing {prop} translation")
+    if len(page["properties"]["phrase_name"]["title"]) > 0:
+        phrases[
+            page["properties"]["phrase_name"]["title"][0]["text"]["content"]
+        ] = translations
 
 logger.debug(yaml.dump(phrases))
 
