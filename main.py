@@ -26,7 +26,7 @@ from telegram.ext import (
 
 # Enable logging
 logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    format = "%(levelname)s@%(name)s: %(message)s",
     level=os.environ.get("LOGLEVEL", "INFO"),
 )
 
@@ -63,8 +63,8 @@ S3_BUCKET_ENDPOINT = os.environ.get(
 )
 s3_client = session.client(
     service_name="s3",
-    aws_access_key_id=os.environ["AWS_KEY_ID"],
-    aws_secret_access_key=os.environ["AWS_KEY"],
+    aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
+    aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
     endpoint_url=S3_BUCKET_ENDPOINT,
 )
 boto3.set_stream_logger("boto3.resources", logging.INFO)
@@ -710,7 +710,7 @@ def push_notion(data):
 
 
 def reset(update: Update, context: CallbackContext) -> int:
-    reset_preferences(update.message.chat.id)
+    reset_preferences(str(update.message.chat.id))
     context.user_data["language"] = None
     update.message.reply_text(
         "Your preferences have been reset. Press /start to report a location."

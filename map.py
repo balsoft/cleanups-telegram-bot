@@ -28,12 +28,14 @@ else:
 session = boto3.session.Session()
 
 BUCKET = os.environ["S3_BUCKET"]
-s3_bucket_endpoint = "https://storage.yandexcloud.net"
+S3_BUCKET_ENDPOINT = os.environ.get(
+    "S3_BUCKET_ENDPOINT", "https://storage.yandexcloud.net"
+)
 s3_client = session.client(
     service_name="s3",
-    aws_access_key_id=os.environ["AWS_KEY_ID"],
-    aws_secret_access_key=os.environ["AWS_KEY"],
-    endpoint_url=s3_bucket_endpoint,
+    aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
+    aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
+    endpoint_url=S3_BUCKET_ENDPOINT,
 )
 
 
