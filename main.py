@@ -84,7 +84,9 @@ for page in pages["results"]:
     for prop in page["properties"]:
         if prop != "phrase_name":
             if len(page["properties"][prop]["rich_text"]) > 0:
-                translations[prop] = page["properties"][prop]["rich_text"][0]["plain_text"]
+                translations[prop] = page["properties"][prop]["rich_text"][0][
+                    "plain_text"
+                ]
             else:
                 logger.warning(f"Missing {prop} translation")
     if len(page["properties"]["phrase_name"]["title"]) > 0:
