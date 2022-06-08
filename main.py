@@ -8,6 +8,8 @@ import os
 import random
 import string
 import re
+import traceback
+
 
 import boto3
 import yaml
@@ -24,26 +26,42 @@ from telegram.ext import (
     CallbackContext,
 )
 
+# Required env vars
+TELEGRAM_TOKEN = os.environ["TELEGRAM_TOKEN"]
+NOTION_API_KEY = os.environ["NOTION_API_KEY"]
+TRANSLATIONS_DB = os.environ["TRANSLATIONS_DB_ID"]
+AWS_ACCESS_KEY_ID = os.environ["AWS_ACCESS_KEY_ID"]
+AWS_SECRET_ACCESS_KEY = os.environ["AWS_SECRET_ACCESS_KEY"]
+DATA_PATH_PREFIX = os.environ["DATA_PATH_PREFIX"]
+BUCKET = os.environ["S3_BUCKET"]
+
+# Optional env vars
+action_databases = {
+    "report_dirty_place": os.environ.get("TRASH_DB_ID"),
+    "report_place_for_urn": os.environ.get("URN_DB_ID"),
+}
+
+PREFERENCES_DB = os.environ.get("PREFERENCES_DB_ID")
+FEEDBACK_DB = os.environ.get("FEEDBACK_DB_ID")
+EXCEPTIONS_DB = os.environ.get("EXCEPTIONS_DB_ID")
+
+
+S3_BUCKET_ENDPOINT = os.environ.get(
+    "S3_BUCKET_ENDPOINT", "https://storage.yandexcloud.net"
+)
+
+LOGLEVEL = os.environ.get("LOGLEVEL", "INFO")
+
+
 # Enable logging
 logging.basicConfig(
-    format = "%(levelname)s@%(name)s: %(message)s",
-    level=os.environ.get("LOGLEVEL", "INFO"),
+    format="%(levelname)s@%(name)s: %(message)s",
 )
 
 logger = logging.getLogger(__name__)
 
 
-TELEGRAM_TOKEN = os.environ["TELEGRAM_TOKEN"]
-
-
-notion = Client(auth=os.environ["NOTION_API_KEY"])
-# this is language and feature flags that can be enabled via env vars
-
-
-action_databases = {
-    "report_dirty_place": os.environ.get("TRASH_DB_ID"),
-    "report_place_for_urn": os.environ.get("URN_DB_ID"),
-}
+notion = Client(auth=NOTION_API_KEY)
 
 action_list = []
 for name in action_databases:
@@ -52,32 +70,26 @@ for name in action_databases:
 
 assert len(action_list) > 0, "Provide a database for at least one action"
 
-
-PREFERENCES_DB = os.environ.get("PREFERENCES_DB_ID")
-
 session = boto3.session.Session()
 
-BUCKET = os.environ["S3_BUCKET"]
-S3_BUCKET_ENDPOINT = os.environ.get(
-    "S3_BUCKET_ENDPOINT", "https://storage.yandexcloud.net"
-)
 s3_client = session.client(
     service_name="s3",
-    aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
-    aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
+    aws_access_key_id=AWS_ACCESS_KEY_ID,
+    aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
     endpoint_url=S3_BUCKET_ENDPOINT,
 )
 boto3.set_stream_logger("boto3.resources", logging.INFO)
-DATA_PATH_PREFIX = os.environ["DATA_PATH_PREFIX"]
 # dir where to store language file , its tmpfs fir in kuberentes
 # locally you can set any dir but it should contain /dynamic and /tmpfs subdirs
 S3_FILE_PREFIX = f"{DATA_PATH_PREFIX}/dynamic"
 PHRASES_FILE_PREFIX = f"{DATA_PATH_PREFIX}/tmpfs"
 PHRASES_FILE = "phrases.yaml"
 
-LANGUAGE, ACTION, DESCRIPTION, MEDIA, LOCATION = range(5)
+LANGUAGE, ACTION, DESCRIPTION, CONTENT, LOCATION = range(5)
 
-pages = notion.databases.query(**{"database_id": os.environ["TRANSLATIONS_DB_ID"]})
+REPORT, FEEDBACK = range(2)
+
+pages = notion.databases.query(**{"database_id": TRANSLATIONS_DB})
 phrases = {}
 for page in pages["results"]:
     translations = {}
@@ -94,7 +106,7 @@ for page in pages["results"]:
             page["properties"]["phrase_name"]["title"][0]["text"]["content"]
         ] = translations
 
-logger.debug(yaml.dump(phrases))
+# logger.debug(yaml.dump(phrases))
 
 language_list = list(phrases["language_name"].keys())
 if "LANGUAGES" in os.environ:
@@ -176,18 +188,16 @@ def reset_preferences(user: str):
             notion.blocks.delete(page["id"])
 
 
-def start(update: Update, context: CallbackContext) -> int:
+def init(update: Update, context: CallbackContext):
     """Start the conversation"""
 
     context.user_data["user_full_name"] = update.message.chat.full_name
     context.user_data["user_telegram_username"] = update.message.chat.username
     context.user_data["user_id"] = str(update.message.chat.id)
     context.user_data["chat_date"] = str(update.message.date.strftime("%s"))
-    context.user_data["action"] = None
-    context.user_data["description"] = None
     context.user_data["photos"] = []
     context.user_data["videos"] = []
-    context.user_data["location"] = {}
+    context.user_data["comments"] = []
 
     logger.info(
         "Starting conversation with %s", context.user_data["user_telegram_username"]
@@ -200,10 +210,27 @@ def start(update: Update, context: CallbackContext) -> int:
     if len(language_list) == 1:
         context.user_data["language"] = language_list[0]
 
+
+def report(update: Update, context: CallbackContext) -> int:
+    init(update, context)
+
+    context.user_data["flow"] = REPORT
+    context.user_data["action"] = None
+    context.user_data["description"] = None
+    context.user_data["location"] = {}
+
     # Set action list
 
     if len(action_list) == 1:
         context.user_data["action"] = action_list[0]
+
+    return request_language(update, context)
+
+
+def feedback(update: Update, context: CallbackContext) -> int:
+    init(update, context)
+
+    context.user_data["flow"] = FEEDBACK
 
     return request_language(update, context)
 
@@ -220,7 +247,13 @@ def request_language(update: Update, context: CallbackContext) -> int:
     """Ask for user's language if not already set"""
 
     if context.user_data.get("language"):
-        return request_action(update, context)
+        if context.user_data["flow"] == REPORT:
+            return request_action(update, context)
+        elif context.user_data["flow"] == FEEDBACK:
+            return request_feedback(update, context)
+        else:
+            raise BaseException("Unexpected flow type %s" % context.user_data["flow"])
+
     else:
         reply_keyboard = [
             [phrases["language_name"][language.strip()]] for language in language_list
@@ -256,14 +289,19 @@ def language(update: Update, context: CallbackContext) -> int:
 
     lang = context.user_data["language"]
 
-    update.message.reply_text(phrases["intro_phrase"][lang])
-
-    return request_action(update, context)
+    if context.user_data["flow"] == REPORT:
+        return request_action(update, context)
+    elif context.user_data["flow"] == FEEDBACK:
+        return request_feedback(update, context)
+    else:
+        raise BaseException("Unexpected flow type %s" % context.user_data["flow"])
 
 
 def request_action(update: Update, context: CallbackContext) -> int:
     """Request which action the user wants to take if not already set"""
     lang = context.user_data["language"]
+
+    update.message.reply_text(phrases["intro_phrase"][lang])
 
     if context.user_data.get("action"):
         return request_description(update, lang)
@@ -312,26 +350,26 @@ def description(update: Update, context: CallbackContext) -> int:
 
     context.user_data["description"] = response
 
-    return request_media(update, lang)
+    return request_content(update, lang)
 
 
-def request_media(update: Update, lang: str) -> int:
+def request_content(update: Update, lang: str) -> int:
     """Ask user to submit media of the location"""
 
     update.message.reply_text(
         phrases["media_phrase"][lang],
     )
 
-    return MEDIA
+    return CONTENT
 
 
-def media_markup(lang: str):
+def content_markup(lang: str):
     return ReplyKeyboardMarkup(
         [[phrases["done_button"][lang]]], input_field_placeholder="Done?"
     )
 
 
-def wait_for_media(update: Update, lang: str):
+def wait_for_content(update: Update, lang: str):
     """Tell user to wait until media is uploaded"""
     update.message.reply_text(
         phrases["wait_for_media"][lang],
@@ -341,55 +379,63 @@ def wait_for_media(update: Update, lang: str):
 def photo_uploaded(update: Update, lang: str) -> int:
     """Notify user that a photo has been uploaded"""
     update.message.reply_text(
-        phrases["photo_uploaded"][lang], reply_markup=media_markup(lang), quote=True
+        phrases["photo_uploaded"][lang], reply_markup=content_markup(lang), quote=True
     )
-    return MEDIA
+    return CONTENT
 
 
 def video_uploaded(update: Update, lang: str) -> int:
     """Notify user that a video has been uploaded"""
     update.message.reply_text(
-        phrases["video_uploaded"][lang], reply_markup=media_markup(lang), quote=True
+        phrases["video_uploaded"][lang], reply_markup=content_markup(lang), quote=True
     )
-    return MEDIA
+    return CONTENT
 
 
-def media_error(update: Update, lang: str) -> int:
+def content_error(update: Update, lang: str) -> int:
     """Notify user that there has been an error during media upload"""
     update.message.reply_text(phrases["media_error"][lang], quote=True)
-    return MEDIA
+    return CONTENT
 
 
 def media_required(update: Update, lang: str) -> int:
     """Tell the user to submit at least one photo or video"""
     update.message.reply_text(phrases["media_required"][lang])
-    return MEDIA
+    return CONTENT
 
 
-def media(update: Update, context: CallbackContext) -> int:
+def content(update: Update, context: CallbackContext) -> int:
     """Receive & upload media from the user, saving the URL"""
 
     lang = context.user_data["language"]
     if context.user_data["user_telegram_username"] != None:
-
         user_telegram_username = context.user_data["user_telegram_username"]
     else:
-        user_telegram_username = context.user_data["user_full_name"]
+        user_telegram_username = context.user_data["user_id"]
     chat_date = context.user_data["chat_date"]
 
     try:
         if update.message.text:
             response = update.message.text
 
-            find_phrase_name(response, ["done_button"])
+            try:
+                find_phrase_name(response, ["done_button"])
 
-            if len(context.user_data["photos"]) + len(context.user_data["videos"]) > 0:
-                return request_location(update, lang)
-            else:
-                return media_required(update, lang)
+                if context.user_data["flow"] == FEEDBACK:
+                    return done(update, context)
+                elif (
+                    len(context.user_data["photos"]) + len(context.user_data["videos"])
+                    > 0
+                ):
+                    return request_location(update, lang)
+                else:
+                    return media_required(update, lang)
+            except ValueError:
+                context.user_data["comments"].append(update.message.text)
+                return CONTENT
 
         if update.message.photo:
-            wait_for_media(update, lang)
+            wait_for_content(update, lang)
 
             context.user_data["photos"].append(
                 reupload_media(
@@ -400,7 +446,7 @@ def media(update: Update, context: CallbackContext) -> int:
             return photo_uploaded(update, lang)
 
         if update.message.video:
-            wait_for_media(update, lang)
+            wait_for_content(update, lang)
 
             context.user_data["videos"].append(
                 reupload_media(
@@ -412,7 +458,7 @@ def media(update: Update, context: CallbackContext) -> int:
     except BaseException as exp:
         logger.warning(exp)
 
-    return media_error(update, lang)
+    return content_error(update, lang)
 
 
 def request_location(update: Update, lang: str) -> int:
@@ -501,28 +547,27 @@ def done(update: Update, context: CallbackContext) -> int:
     """Upload the report to notion and end the conversation"""
 
     lang = context.user_data["language"]
+    flow = context.user_data["flow"]
 
-    try:
-        push_notion(context.user_data)
-        if context.user_data["user_telegram_username"] != None:
-            create_or_update_preferences(context.user_data)
-    except BaseException as exp:
-        # TODO translate
-        logger.warning("Generating the report failed:\n%s", exp)
-        update.message.reply_text(phrases["something_went_wrong"][lang] % exp)
-    else:
-        update.message.reply_text(phrases["location_done"][lang])
+    if flow == REPORT:
+        push_notion_report(context.user_data)
+    elif flow == FEEDBACK:
+        push_notion_feedback(context.user_data)
+    if context.user_data["user_telegram_username"] != None:
+        create_or_update_preferences(context.user_data)
+
+    update.message.reply_text(
+        phrases["location_done"][lang]
+        if flow == REPORT
+        else phrases["thanks_for_feedback"][lang]
+    )
 
     return ConversationHandler.END
 
 
-def push_notion(data):
-    """Prepares and submits a notion page with the report"""
-
-    logger.debug(yaml.dump(data))
-
-    if data["user_telegram_username"] != None:
-        reported_by = {
+def notion_reported_by(data):
+    if data.get("user_telegram_username"):
+        return {
             "rich_text": [
                 {
                     "text": {
@@ -535,7 +580,7 @@ def push_notion(data):
             ]
         }
     else:
-        reported_by = {
+        return {
             "rich_text": [
                 {
                     "text": {
@@ -545,61 +590,91 @@ def push_notion(data):
             ]
         }
 
-    page_id = {"title": [{"text": {"content": data["description"]}}]}
 
-    report_description_heading = {
-        "object": "block",
-        "type": "heading_2",
-        "heading_2": {
-            "rich_text": [{"type": "text", "text": {"content": "Report description"}}]
-        },
-    }
-    report_description = {
+def notion_title(content):
+    return {"title": [{"text": {"content": content}}]}
+
+
+def notion_paragraph(content, code=False):
+    return {
         "object": "block",
         "type": "paragraph",
         "paragraph": {
             "rich_text": [
                 {
                     "type": "text",
-                    "text": {"content": data["description"]},
+                    "annotations": {"code": code},
+                    "text": {"content": content},
                 },
             ]
         },
     }
 
-    report_media_heading = {
+
+def notion_photo(url):
+    return {
         "object": "block",
-        "type": "heading_2",
-        "heading_2": {
-            "rich_text": [{"type": "text", "text": {"content": "Report Media"}}]
+        "type": "image",
+        "image": {"type": "external", "external": {"url": url}},
+    }
+
+
+def notion_video(url):
+    return {
+        "object": "block",
+        "type": "video",
+        "video": {"type": "external", "external": {"url": url}},
+    }
+
+
+def notion_link(content, url):
+    return {
+        "object": "block",
+        "type": "paragraph",
+        "paragraph": {
+            "rich_text": [
+                {
+                    "type": "text",
+                    "text": {
+                        "content": content,
+                        "link": {"url": url},
+                    },
+                }
+            ],
         },
     }
 
-    report_photos = [
-        {
-            "object": "block",
-            "type": "image",
-            "image": {"type": "external", "external": {"url": url}},
-        }
-        for url in data["photos"]
-    ]
 
-    report_videos = [
-        {
-            "object": "block",
-            "type": "video",
-            "video": {"type": "external", "external": {"url": url}},
-        }
-        for url in data["videos"]
-    ]
-
-    location_heading = {
+def notion_heading2(content):
+    return {
         "object": "block",
         "type": "heading_2",
-        "heading_2": {
-            "rich_text": [{"type": "text", "text": {"content": "Report Location"}}]
-        },
+        "heading_2": {"rich_text": [{"type": "text", "text": {"content": content}}]},
     }
+
+
+def push_notion_report(data):
+    """Prepares and submits a notion page with the report"""
+
+    logger.debug(yaml.dump(data))
+
+    reported_by = notion_reported_by(data)
+
+    page_id = notion_title(data["description"])
+
+    report_description_heading = notion_heading("Report description")
+
+    report_description = notion_paragraph(data["description"])
+
+    report_media_heading = notion_heading("Report content")
+
+    report_photos = [notion_photo(url) for url in data["photos"]]
+
+    report_videos = [notion_video(url) for url in data["videos"]]
+
+    report_comments = [notion_paragraph(comment) for comment in data["comments"]]
+
+    location_heading = notion_heading("Report Location")
 
     photo = data["location"].get("photo")
     coordinates = data["location"].get("coordinates")
@@ -610,25 +685,14 @@ def push_notion(data):
             coordinates["lat"],
             coordinates["lon"],  #
         )
-        location_block = {
-            "object": "block",
-            "type": "paragraph",
-            "paragraph": {
-                "rich_text": [
-                    {
-                        "type": "text",
-                        "text": {
-                            "content": "%s-%s"
-                            % (
-                                coordinates["lat"],
-                                coordinates["lon"],
-                            ),
-                            "link": {"url": location_url},
-                        },
-                    }
-                ],
-            },
-        }
+        location_block = notion_link(
+            "%s-%s"
+            % (
+                coordinates["lat"],
+                coordinates["lon"],
+            ),
+            location_url,
+        )
         location_property = {
             "rich_text": [
                 {
@@ -640,11 +704,7 @@ def push_notion(data):
             ]
         }
     elif photo:
-        location_block = {
-            "object": "block",
-            "type": "image",
-            "image": {"type": "external", "external": {"url": photo}},
-        }
+        location_block = notion_photo(photo)
         location_property = {
             "rich_text": [
                 {
@@ -655,20 +715,7 @@ def push_notion(data):
             ]
         }
     elif link:
-        location_block = {
-            "object": "block",
-            "type": "paragraph",
-            "paragraph": {
-                "rich_text": [
-                    {
-                        "type": "text",
-                        "text": {
-                            "content": link["text"],
-                        },
-                    }
-                ]
-            },
-        }
+        location_block = notion_paragraph(link["text"])
         location_property = {
             "rich_text": [
                 {"text": {"content": link["type"], "link": {"url": link["url"]}}}
@@ -690,6 +737,7 @@ def push_notion(data):
         ]
         + report_photos
         + report_videos
+        + report_comments
         + [location_heading, location_block],
     }
 
@@ -709,11 +757,81 @@ def push_notion(data):
     notion.pages.create(**page)
 
 
+def request_feedback(update: Update, context: CallbackContext) -> int:
+    lang = context.user_data["language"]
+    update.message.reply_text(
+        phrases["feedback_phrase"][lang],
+        reply_markup=content_markup(lang),
+    )
+    return CONTENT
+
+
+def push_notion_feedback(data):
+    logger.debug(yaml.dump(data))
+
+    reported_by = notion_reported_by(data)
+
+    page_id = notion_title("Feedback by " + data["user_full_name"])
+
+    page = {
+        "parent": {"database_id": FEEDBACK_DB},
+        "properties": {
+            "reported_by": reported_by,
+            "id": page_id,
+        },
+        "children": [notion_paragraph(text) for text in data["comments"]]
+        + [notion_photo(url) for url in data["photos"]]
+        + [notion_video(url) for url in data["videos"]],
+    }
+
+    logger.debug(yaml.dump(page))
+
+    notion.pages.create(**page)
+
+
+def submit_error_to_notion(update: Update, context: CallbackContext):
+    logger.error(msg="Exception while handling an update:", exc_info=context.error)
+
+    page_id = notion_title(str(context.error))
+
+    page = {
+        "parent": {"database_id": EXCEPTIONS_DB},
+        "properties": {
+            "id": page_id,
+            "Exception type": {"select": {"name": context.error.__class__.__name__}},
+            "User": {
+                "rich_text": [
+                    {
+                        "text": {
+                            "content": update.message.from_user.full_name
+                        }
+                    }
+                ]
+            },
+        },
+        "children": [
+            notion_heading2("Exception"),
+            notion_paragraph(
+                "\n".join(
+                    traceback.format_exception(
+                        None, context.error, context.error.__traceback__
+                    )
+                ),
+                code=True,
+            ),
+            notion_heading2("user_data"),
+            notion_paragraph(str(context.user_data), code=True),
+        ],
+    }
+
+    notion.pages.create(**page)
+
+
 def reset(update: Update, context: CallbackContext) -> int:
     reset_preferences(str(update.message.chat.id))
     context.user_data["language"] = None
     update.message.reply_text(
-        "Your preferences have been reset. Press /start to report a location."
+        "Your preferences have been reset. Press /report to report a location, or /feedback to give feedback."
     )
 
     return ConversationHandler.END
@@ -744,15 +862,19 @@ def main() -> None:
 
     # Conversation handler is a state machine
     conv_handler = ConversationHandler(
-        entry_points=[CommandHandler("start", start), CommandHandler("reset", reset)],
+        entry_points=[
+            CommandHandler("report", report),
+            CommandHandler("reset", reset),
+        ]
+        + ([CommandHandler("feedback", feedback)] if FEEDBACK_DB else []),
         states={
             LANGUAGE: [MessageHandler(Filters.text & ~Filters.command, language)],
             ACTION: [MessageHandler(Filters.text & ~Filters.command, action)],
             DESCRIPTION: [MessageHandler(Filters.text & ~Filters.command, description)],
-            MEDIA: [
+            CONTENT: [
                 MessageHandler(
                     Filters.photo | Filters.video | Filters.text & ~Filters.command,
-                    media,
+                    content,
                 )
             ],
             LOCATION: [
@@ -768,6 +890,9 @@ def main() -> None:
     )
 
     dispatcher.add_handler(conv_handler)
+
+    if EXCEPTIONS_DB:
+        dispatcher.add_error_handler(submit_error_to_notion)
 
     # Start the Bot
     updater.start_polling()

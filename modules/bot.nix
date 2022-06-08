@@ -17,6 +17,14 @@
         type = nullOr notionDb;
         default = null;
       };
+      feedbackDb = mkOption {
+        type = nullOr notionDb;
+        default = null;
+      };
+      exceptionsDb = mkOption {
+        type = nullOr notionDb;
+        default = null;
+      };
       s3Bucket = mkOption { type = str; };
       s3BucketEndpoint = mkOption { type = str; };
       dataPathPrefix = mkOption {
@@ -24,7 +32,10 @@
         default = "/tmp";
       };
       translationsDb = mkOption { type = notionDb; };
-      languages = mkOption { type = nullOr (listOf str); default = null; };
+      languages = mkOption {
+        type = nullOr (listOf str);
+        default = null;
+      };
 
       secretsFile = mkOption { type = path; };
     };
@@ -45,6 +56,10 @@
           PREFERENCES_DB_ID = preferencesDb;
         } // lib.optionalAttrs (!isNull languages) {
           LANGUAGES = builtins.concatStringsSep "," languages;
+        } // lib.optionalAttrs (!isNull feedbackDb) {
+          FEEDBACK_DB_ID = feedbackDb;
+        } // lib.optionalAttrs (!isNull exceptionsDb) {
+          EXCEPTIONS_DB_ID = exceptionsDb;
         };
         serviceConfig = {
           ExecStart = "${package}/bin/cleanups-telegram-bot";
