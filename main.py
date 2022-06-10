@@ -752,9 +752,10 @@ def push_notion_report(data):
             ]
         }
 
-    thumbnail = []
-    if data["thumbnail"]:
-        thumbnail = [notion_photo(data["thumbnail"])]
+    cover = {
+        "type": "external",
+        "external": {"url": data["thumbnail"] or data["photos"][0]},
+    }
 
     page = {
         "parent": {"database_id": action_databases[data["action"]]},
@@ -769,11 +770,11 @@ def push_notion_report(data):
             report_description,
             report_media_heading,
         ]
-        + thumbnail
         + report_photos
         + report_videos
         + report_comments
         + [location_heading, location_block],
+        "cover": cover,
     }
 
     if coordinates:
