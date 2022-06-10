@@ -31,6 +31,7 @@
         type = path;
         default = "/tmp";
       };
+      notionStaticPageUrl = mkOption { type = str; };
       translationsDb = mkOption { type = notionDb; };
       languages = mkOption {
         type = nullOr (listOf str);
@@ -52,6 +53,7 @@
           S3_BUCKET_ENDPOINT = s3BucketEndpoint;
           DATA_PATH_PREFIX = dataPathPrefix;
           TRANSLATIONS_DB_ID = translationsDb;
+          NOTION_STATIC_PAGE_URL = notionStaticPageUrl;
         } // lib.optionalAttrs (!isNull preferencesDb) {
           PREFERENCES_DB_ID = preferencesDb;
         } // lib.optionalAttrs (!isNull languages) {
