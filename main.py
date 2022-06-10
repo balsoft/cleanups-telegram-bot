@@ -9,6 +9,7 @@ import random
 import string
 import re
 import traceback
+import ffmpeg
 
 
 import boto3
@@ -127,13 +128,22 @@ def find_phrase_name(phrase: str, possible=None) -> str:
     raise ValueError()
 
 
-def reupload_media(media_size, extension: str, user_id: str, chat_date: str) -> str:
+def reupload_media(
+    media_size, extension: str, user_id: str, chat_date: str, generate_thumbnail=False
+) -> str:
     """Download media and re-upload it to S3, returning the URL"""
     random_suffix = "".join(random.choice(string.ascii_lowercase) for i in range(10))
     file_name = f"user_media-{random_suffix}-{chat_date}-{user_id}.{extension}"
     path = f"{S3_FILE_PREFIX}/{file_name}"
     media_size.get_file().download(path)
     s3_client.upload_file(path, BUCKET, file_name)
+    if generate_thumbnail:
+        thumbnail_file_name = f"{file_name}.thumb.png"
+        thumbnail_path = f"{S3_FILE_PREFIX}/{thumbnail_file_name}"
+        ffmpeg.input(path, ss=1).filter("scale", 512, -1).output(
+            thumbnail_path, vframes=1
+        ).run()
+        s3_client.upload_file(thumbnail_path, BUCKET, thumbnail_file_name)
     os.remove(path)
     return f"{S3_BUCKET_ENDPOINT}/{BUCKET}/{file_name}"
 
@@ -197,6 +207,7 @@ def init(update: Update, context: CallbackContext):
     context.user_data["chat_date"] = str(update.message.date.strftime("%s"))
     context.user_data["photos"] = []
     context.user_data["videos"] = []
+    context.user_data["thumbnail"] = None
     context.user_data["comments"] = []
 
     logger.info(
@@ -448,11 +459,22 @@ def content(update: Update, context: CallbackContext) -> int:
         if update.message.video:
             wait_for_content(update, lang)
 
-            context.user_data["videos"].append(
-                reupload_media(
-                    update.message.video, "mp4", user_telegram_username, chat_date
-                )
+            generate_thumbnail = (
+                len(context.user_data["videos"] + context.user_data["photos"]) == 0
             )
+
+            video = reupload_media(
+                update.message.video,
+                "mp4",
+                user_telegram_username,
+                chat_date,
+                generate_thumbnail=generate_thumbnail,
+            )
+
+            context.user_data["videos"].append(video)
+
+            if generate_thumbnail:
+                context.user_data["thumbnail"] = f"{video}.thumb.png"
 
             return video_uploaded(update, lang)
     except BaseException as exp:
@@ -662,11 +684,11 @@ def push_notion_report(data):
 
     page_id = notion_title(data["description"])
 
-    report_description_heading = notion_heading("Report description")
+    report_description_heading = notion_heading2("Report description")
 
     report_description = notion_paragraph(data["description"])
 
-    report_media_heading = notion_heading("Report content")
+    report_media_heading = notion_heading2("Report content")
 
     report_photos = [notion_photo(url) for url in data["photos"]]
 
@@ -674,7 +696,7 @@ def push_notion_report(data):
 
     report_comments = [notion_paragraph(comment) for comment in data["comments"]]
 
-    location_heading = notion_heading("Report Location")
+    location_heading = notion_heading2("Report Location")
 
     photo = data["location"].get("photo")
     coordinates = data["location"].get("coordinates")
@@ -722,6 +744,12 @@ def push_notion_report(data):
             ]
         }
 
+    thumbnail = []
+    if data["thumbnail"]:
+        thumbnail = [
+            notion_photo(data["thumbnail"])
+        ]
+
     page = {
         "parent": {"database_id": action_databases[data["action"]]},
         "properties": {
@@ -735,6 +763,7 @@ def push_notion_report(data):
             report_description,
             report_media_heading,
         ]
+        + thumbnail
         + report_photos
         + report_videos
         + report_comments
@@ -800,13 +829,7 @@ def submit_error_to_notion(update: Update, context: CallbackContext):
             "id": page_id,
             "Exception type": {"select": {"name": context.error.__class__.__name__}},
             "User": {
-                "rich_text": [
-                    {
-                        "text": {
-                            "content": update.message.from_user.full_name
-                        }
-                    }
-                ]
+                "rich_text": [{"text": {"content": update.message.from_user.full_name}}]
             },
         },
         "children": [

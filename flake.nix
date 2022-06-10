@@ -38,6 +38,7 @@
             pyyaml
             gmplot
             requests
+            ffmpeg-python
           ]);
 
         bot = pkgs.writeShellScriptBin "cleanups-telegram-bot"
