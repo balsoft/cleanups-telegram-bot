@@ -46,6 +46,7 @@ PREFERENCES_DB = os.environ.get("PREFERENCES_DB_ID")
 FEEDBACK_DB = os.environ.get("FEEDBACK_DB_ID")
 EXCEPTIONS_DB = os.environ.get("EXCEPTIONS_DB_ID")
 
+NOTION_STATIC_PAGE_URL = os.environ.get("NOTION_STATIC_PAGE_URL")
 
 S3_BUCKET_ENDPOINT = os.environ.get(
     "S3_BUCKET_ENDPOINT", "https://storage.yandexcloud.net"
@@ -572,11 +573,14 @@ def done(update: Update, context: CallbackContext) -> int:
     flow = context.user_data["flow"]
 
     if flow == REPORT:
-        push_notion_report(context.user_data)
+        page_id = push_notion_report(context.user_data)
     elif flow == FEEDBACK:
-        push_notion_feedback(context.user_data)
+        page_id = push_notion_feedback(context.user_data)
     if context.user_data["user_telegram_username"] != None:
         create_or_update_preferences(context.user_data)
+
+    if NOTION_STATIC_PAGE_URL:
+        update.message.reply_text(f"{NOTION_STATIC_PAGE_URL}/{page_id}")
 
     update.message.reply_text(
         phrases["location_done"][lang]
@@ -783,7 +787,7 @@ def push_notion_report(data):
 
     logger.debug(yaml.dump(page))
 
-    notion.pages.create(**page)
+    return notion.pages.create(**page)["id"].replace("-", "")
 
 
 def request_feedback(update: Update, context: CallbackContext) -> int:
@@ -815,7 +819,7 @@ def push_notion_feedback(data):
 
     logger.debug(yaml.dump(page))
 
-    notion.pages.create(**page)
+    return notion.pages.create(**page)["id"].replace("-", "")
 
 
 def submit_error_to_notion(update: Update, context: CallbackContext):
