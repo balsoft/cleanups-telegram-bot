@@ -889,7 +889,7 @@ def main() -> None:
     for lang in language_list:
         updater.bot.set_my_commands(
             [
-                BotCommand(command, phrases[f"{command}_command"][lang])
+                BotCommand(command, phrases[f"{command}_command"][lang], language_code=lang)
                 for command in ["report", "feedback", "cancel", "reset"]
             ]
         )
