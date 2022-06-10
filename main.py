@@ -17,7 +17,7 @@ import yaml
 from notion_client import Client
 
 
-from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
+from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, Update, BotCommand
 from telegram.ext import (
     Updater,
     CommandHandler,
@@ -221,6 +221,10 @@ def init(update: Update, context: CallbackContext):
 
     if len(language_list) == 1:
         context.user_data["language"] = language_list[0]
+    elif update.message.from_user.language_code:
+        code = update.message.from_user.language_code.lower()
+        if code in language_list:
+            context.user_data["language"] = code
 
 
 def report(update: Update, context: CallbackContext) -> int:
@@ -750,9 +754,7 @@ def push_notion_report(data):
 
     thumbnail = []
     if data["thumbnail"]:
-        thumbnail = [
-            notion_photo(data["thumbnail"])
-        ]
+        thumbnail = [notion_photo(data["thumbnail"])]
 
     page = {
         "parent": {"database_id": action_databases[data["action"]]},
@@ -883,6 +885,14 @@ def main() -> None:
     """Run the bot."""
     # Create the Updater and pass it your bot's token.
     updater = Updater(token=TELEGRAM_TOKEN, use_context=True)
+
+    for lang in language_list:
+        updater.bot.set_my_commands(
+            [
+                BotCommand(command, phrases[f"{command}_command"][lang])
+                for command in ["report", "feedback", "cancel", "reset"]
+            ]
+        )
 
     # Get the dispatcher to register handlers
     dispatcher = updater.dispatcher
