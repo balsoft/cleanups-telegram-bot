@@ -882,6 +882,11 @@ def cancel(update: Update, context: CallbackContext) -> int:
     return ConversationHandler.END
 
 
+def dont_understand(update: Update, context: CallbackContext):
+    lang = context.user_data.get("language", update.message.from_user.language_code or language_list[0])
+    update.message.reply_text(phrases["dont_understand"][lang], quote=True)
+
+
 def main() -> None:
     """Run the bot."""
     # Create the Updater and pass it your bot's token.
@@ -905,7 +910,8 @@ def main() -> None:
             CommandHandler("report", report),
             CommandHandler("reset", reset),
         ]
-        + ([CommandHandler("feedback", feedback)] if FEEDBACK_DB else []),
+        + ([CommandHandler("feedback", feedback)] if FEEDBACK_DB else [])
+        + [MessageHandler(Filters.all, dont_understand)],
         states={
             LANGUAGE: [MessageHandler(Filters.text & ~Filters.command, language)],
             ACTION: [MessageHandler(Filters.text & ~Filters.command, action)],
@@ -925,7 +931,11 @@ def main() -> None:
                 )
             ],
         },
-        fallbacks=[CommandHandler("cancel", cancel), CommandHandler("reset", reset)],
+        fallbacks=[
+            CommandHandler("cancel", cancel),
+            CommandHandler("reset", reset),
+            MessageHandler(Filters.all, dont_understand),
+        ],
     )
 
     dispatcher.add_handler(conv_handler)
