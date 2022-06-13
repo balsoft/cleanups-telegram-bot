@@ -883,7 +883,12 @@ def cancel(update: Update, context: CallbackContext) -> int:
 
 
 def dont_understand(update: Update, context: CallbackContext):
-    lang = context.user_data.get("language", update.message.from_user.language_code or language_list[0])
+    lang = context.user_data.get(
+        "language",
+        update.message.from_user.language_code
+        if update.message.from_user.language_code in language_list
+        else language_list[0],
+    )
     update.message.reply_text(phrases["dont_understand"][lang], quote=True)
 
 
