@@ -908,6 +908,7 @@ def main() -> None:
     conv_handler = ConversationHandler(
         entry_points=[
             CommandHandler("report", report),
+            CommandHandler("start", report),
             CommandHandler("reset", reset),
         ]
         + ([CommandHandler("feedback", feedback)] if FEEDBACK_DB else [])
