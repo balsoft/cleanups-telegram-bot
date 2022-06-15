@@ -42,6 +42,7 @@ action_databases = {
     "report_place_for_urn": os.environ.get("URN_DB_ID"),
 }
 
+NOTION_GMAP_APIKEY = os.environ.get("NOTION_GMAP_APIKEY")
 PREFERENCES_DB = os.environ.get("PREFERENCES_DB_ID")
 FEEDBACK_DB = os.environ.get("FEEDBACK_DB_ID")
 EXCEPTIONS_DB = os.environ.get("EXCEPTIONS_DB_ID")
@@ -675,6 +676,10 @@ def notion_link(content, url):
     }
 
 
+def notion_embed(url):
+    return {"object": "block", "type": "embed", "embed": {"url": url}}
+
+
 def notion_heading2(content):
     return {
         "object": "block",
@@ -713,16 +718,26 @@ def push_notion_report(data):
     if coordinates:
         location_url = "https://www.google.com/maps/search/?api=1&query=%s,%s" % (
             coordinates["lat"],
-            coordinates["lon"],  #
+            coordinates["lon"],
         )
-        location_block = notion_link(
-            "%s-%s"
-            % (
-                coordinates["lat"],
-                coordinates["lon"],
-            ),
-            location_url,
-        )
+        if NOTION_GMAP_APIKEY:
+            location_block = notion_embed(
+                "https://www.google.com/maps/embed/v1/place?key=%s&q=%s,%s&zoom=15"
+                % (
+                    NOTION_GMAP_APIKEY,
+                    coordinates["lat"],
+                    coordinates["lon"],
+                )
+            )
+        else:
+            location_block = notion_link(
+                "%s, %s"
+                % (
+                    coordinates["lat"],
+                    coordinates["lon"],
+                ),
+                location_url,
+            )
         location_property = {
             "rich_text": [
                 {
