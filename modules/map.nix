@@ -55,6 +55,7 @@
         };
       };
       systemd.timers.cleanups-map = {
+        wantedBy = ["multi-user.target"];
         timerConfig = {
           OnCalendar = interval;
           Unit = "cleanups-map.service";
