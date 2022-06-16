@@ -5,6 +5,7 @@ import os
 import gmplot
 import mimetypes
 import json
+import datetime
 
 database_id = os.environ["TRASH_DB_ID"]
 notion = Client(auth=os.environ["NOTION_API_KEY"])
@@ -81,9 +82,10 @@ clean_colour = "green"
 clean_edge_colour = "darkgreen"
 dirty_colour = "red"
 dirty_edge_colour = "darkred"
+pending_colour = "blue"
 
 
-statuses = ["Clean", "Dirty"]  # can be tranformed to feature later
+statuses = ["Clean", "Dirty", "Pending Clean-up"]
 notion_static_page_url = os.environ["NOTION_STATIC_PAGE_URL"]
 
 """We parse only pages with statuses that we provide"""
@@ -110,23 +112,45 @@ for status in statuses:
             if status == "Dirty":
                 label = "!"
                 colour = dirty_colour
-            else:
+            elif status == "Clean":
                 label = "C"
                 colour = clean_colour
+            elif status == "Pending Clean-up":
+                label = "P"
+                colour = pending_colour
+            else:
+                continue
 
-            image = ""
-            # print(page_id)
-            # Find the first acceptable image
-            # req = {"block_id": page_id, "page_size": 50}
-            for child in notion.blocks.children.list(page_id)["results"]:
-                # print(child)
-                if child["type"] == "image" and child["image"]["type"] == "external":
-                    image = (
-                        "<img src=%s alt='Image of location' style='position: relative; padding: 0px; margin-right: 10px; max-height: 200px; width=100%%;' /> <br/>"
-                        % child["image"]["external"]["url"]
+            image_html = ""
+            if page.get("cover"):
+                image_html = (
+                    "<img src=%s alt='Image of location' style='position: relative; padding: 0px; margin-right: 10px; max-height: 200px; width=100%%;' /> <br/>"
+                    % page["cover"]["external"]["url"]
+                )
+
+            if (
+                status == "Pending Clean-up"
+                and page["properties"].get("Date")
+                and page["properties"].get("Announcement (Telegram)")
+                and page["properties"].get("Announcement (Facebook)")
+            ):
+                description_html = (
+                    "<h3>%s</h3><b>We're going to clean up here on %s!</b><br/>More details here: <a href=%s target=_blank>Telegram</a> <a href=%s target=_blank>Facebook</a><br/>"
+                    % (
+                        description,
+                        datetime.datetime.strptime(
+                            page["properties"]["Date"]["date"]["start"],
+                            "%Y-%m-%d",
+                        ).strftime("%b %d, %Y"),
+                        page["properties"]["Announcement (Telegram)"]["url"],
+                        page["properties"]["Announcement (Facebook)"]["url"],
                     )
-                    break
-            # If `image' is still empty, we have found no images. No problem, just don't show any!
+                )
+            else:
+                description_html = f"<h3>{description}</h3>"
+
+            reported_by_html = f"Reported by {reporter_by}<br/>"
+            details_html = f"<a href='https://{notion_static_page_url}/{page_id} target='_blank'>Report details</a>"
 
             gmap.marker(
                 marker_loc[0],
@@ -134,8 +158,10 @@ for status in statuses:
                 color=colour,
                 title=marker_name,
                 label=label,
-                info_window="%s<br/> %s <br/>reported by %s <br/> <a href='https://%s/%s' target='_blank'>Details</a>"
-                % (description, image, reporter_by, notion_static_page_url, page_id),
+                info_window=description_html
+                + image_html
+                + reported_by_html
+                + details_html,
             )
         if page["properties"]["polygon"]["rich_text"] != []:
             """If page contains polygon we parse it"""
@@ -151,7 +177,7 @@ for status in statuses:
                 *zip(*polygon),
                 face_color=face_colour,
                 edge_color=edge_colour,
-                edge_width=2
+                edge_width=2,
             )
 
 
