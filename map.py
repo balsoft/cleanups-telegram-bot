@@ -150,7 +150,7 @@ for status in statuses:
                 description_html = f"<h3>{description}</h3>"
 
             reported_by_html = f"Reported by {reporter_by}<br/>"
-            details_html = f"<a href='https://{notion_static_page_url}/{page_id} target='_blank'>Report details</a>"
+            details_html = f"<a href='https://{notion_static_page_url}/{page_id}' target='_blank'>Report details</a>"
 
             gmap.marker(
                 marker_loc[0],
