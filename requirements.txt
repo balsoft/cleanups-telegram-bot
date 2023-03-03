@@ -1,6 +1,8 @@
-notion_client
+firebase_admin
+google-cloud-firestore
 boto3
 python-telegram-bot
 pyyaml
 gmplot
-
+ffmpeg-python
+types-PyYAML

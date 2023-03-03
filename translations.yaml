@@ -1,0 +1,158 @@
+{
+  "language_name": {
+    "en": "English",
+    "hy": "Հայերեն",
+    "ka": "ქართული",
+    "ru": "Русский"
+  },
+  "video_uploaded": {
+    "en": "Video upload is complete.",
+    "hy": "Տեսանյութը վերբեռնվել է",
+    "ka": "ვიდეო ატვირთულია",
+    "ru": "Видео загрузилось."
+  },
+  "media_error": {
+    "en": "Something went wrong. Please send the files again or press “Done” to skip this step.",
+    "hy": "Սխալ. խնդրում եմ սեղմել «Կատարված» է կամ ուղարկել ինձ ուրիշ տեսանյութ",
+    "ka": "რაღაც არასწორია. გთხოვთ გამომიგზავნოთ ფაილები ხელახლა ან დააკლიკეთ „შესრულებულია“ ღილაკს შემდეგ ეტაპზე გადასასვლელად. ",
+    "ru": "Что-то пошло не так. Пожалуйста, пришлите файлы ещё раз или нажмите «Готово», чтобы продолжить дальше без них."
+  },
+  "action_phrase": {
+    "en": "What do you want to report?",
+    "hy": "Ո՞ր վայրի մասին ես ուզում հայտնել:",
+    "ka": "რის შესახებ გსურთ შეგვატყობინოთ?",
+    "ru": "О чём вы хотите сообщить?"
+  },
+  "location_done": {
+    "en": "Good job! Your report is submitted. Press /report to report one more location.",
+    "hy": "Հիանալի է- ամեն ինչ արված է: Դու հայտնել ես գտնվելու վայրի մասին: Կրկին զեկուցելու համար սեղմիր /report",
+    "ka": "ყოჩაღ, ყველაფერი მზადაა. შეტყობინება მიღებულია. გთხოვთ დააჭიროთ /report ღილაკს ახალი შეტყობინებისთვის.",
+    "ru": "Ура, всё готово! Сообщение принято. Нажмите /report, чтобы сообщить о ещё одном месте."
+  },
+  "report_dirty_place": {
+    "en": "Place to clean",
+    "hy": "Մաքրելու վայր",
+    "ka": "დასასუფთავებელი ადგილი",
+    "ru": "Место для уборки"
+  },
+  "done_button": {
+    "en": "Done",
+    "hy": "Կատարված",
+    "ka": "შესრულებულია",
+    "ru": "Готово"
+  },
+  "location_error": {
+    "en": "Please share the location from Telegram or send a screenshot of the map.",
+    "hy": "Խնդրում եմ ուղարկել Telegram-ի գտնվելու վայրը կամ գտնվելու վայրի սքրինշոթը",
+    "ka": "გთხოვთ გამომიგზავნოთ გეოლოკაცია ტელეგრამიდან ან სქრინშოთი ლოკაციით რუკიდან.",
+    "ru": "Пожалуйста, отправьте локацию из Телеграма или пришлите скриншот карты."
+  },
+  "feedback_phrase": {
+    "en": "Please submit your feedback: it can be your comments, or screenshots/videos of something going wrong. Send “Done” when you’re done.",
+    "hy": "Please submit your feedback: it can be your comments, or screenshots/videos of something going wrong. Send “Done” when you’re done.",
+    "ka": "Please submit your feedback: it can be your comments, or screenshots/videos of something going wrong. Send “Done” when you’re done.",
+    "ru": "Please submit your feedback: it can be your comments, or screenshots/videos of something going wrong. Send “Done” when you’re done."
+  },
+  "location_phrase": {
+    "en": "Awesome! Now send me the geolocation. The best way is to share the location directly from Telegram, but you may also send a link from Google/Yandex maps.",
+    "hy": "Լավ! Այժմ ուղարկիր ինձ տեղի հասցեն, կարող ես կիսվել Telegram-ից գտնվելու վայրով կամ ուղարկել տեղանքի գտնվելու վայրի սքրինշոթ",
+    "ka": "შესანიშნავია! ეხლა გთხოვთ გამომიგზავნოთ გეოლოკაცია. ამისთვის საუკეთესო გზა არის პირდაპირ ტელეგრამიდან დაშეარება, მაგრამ ასევე შესაძლებელია გამოყენებული იქნას Google/Yandex რუკა.",
+    "ru": "Хорошо! Теперь пришлите геолокацию места. Лучше всего послать её прямо из Телеграма, но можно также прислать ссылку на Google/Yandex карты."
+  },
+  "description_phrase": {
+    "en": "Please describe where this place is. For instance: Tbilisi, Temka beach",
+    "hy": "Խնդրում եմ, գրել, թե որտեղ է գտնվում աղբի վայրը։ Օրինակ՝ Երևան, Հրազդան գետի ափ։",
+    "ka": "გთხოვთ დაგვიზუსტოთ, სად მდებარეობს დანაგვიანებული ადგილი. მაგალითად, თემქის სანაპირო.",
+    "ru": "Пожалуйста, напишите, где находится замусоренное место. Например: Тбилиси, пляж Темка"
+  },
+  "intro_phrase": {
+    "en": "I will ask you for the description, photos/videos and location of the area that requires a clean-up or a trash can to be installed. You can press /cancel at any moment to stop the process.",
+    "hy": "Ես քեզանից կխնդրեմ նկարագրություն, լուսանկարներ/տեսանյութեր և աղբահանության կարիք ունեցող գտնվելու վայրը: Գործընթացը դադարեցնելու համար ցանկացած պահի կարող ես սեղմել /cancel",
+    "ka": "მე გთხოვთ გამომიგზავნოთ აღწერა, ფოტო და ვიდეო იმ ადგილის, რომელსაც ესაჭირეობა დასუფთავება ან სანაგვე ყუთის დაყენება. პროცესის შესაჩერებლად გთხოვთ გამოიყენოთ ღილაკი /cancel",
+    "ru": "Я попрошу вас прислать описание, фото/видео и координаты места, нуждающегося в уборке или в установке урны. Остановить процесс можно в любой момент, нажав /cancel."
+  },
+  "media_phrase": {
+    "en": "Great! Please send me photos/videos of the location. Wait until all files are uploaded. After that, press “Done” to proceed.",
+    "hy": "Լավ։ Ուղարկիր ինձ տվյալ վայրի լուսանկարներ և տեսանյութեր: Խնդրում եմ սպասել, մինչև ես վերբեռնեմ բոլոր լուսանկարները, հետո սեղմիր «Կատարված»:",
+    "ka": "შესანიშნავია! გთხოვთ გამომიგზავნოთ ფოტო და ვიდეო დანაგვიანებული ადგილის. დაელოდეთ, სანამ ყველა ფაილი აიტვირთება და დააჭირეთ ღილაკს „შესრულებულია“.",
+    "ru": "Хорошо! Отправьте фото и видео места. Дождитесь, пока всё загрузится, и нажмите «Готово»."
+  },
+  "photo_uploaded": {
+    "en": "Photo upload is complete.",
+    "hy": "Լուսանկարը վերբեռնվել է",
+    "ka": "ფოტო ატვირთულია",
+    "ru": "Фото загрузилось."
+  },
+  "wait_for_media": {
+    "en": "Please wait until all the files are uploaded and press “Done” to proceed.",
+    "hy": "Խնդրում եմ սպասել, մինչև յուրաքանչյուր մեդիա ֆայլ վերբեռնվի, հետո սեղմիր «Կատարված»՝ վերբեռնման գործընթացն ավարտելու համար",
+    "ka": "გთხოვთ დაელოდეთ, სანამ ყველა ფაილი აიტვირთება და დააჭირეთ ღილაკს „შესრულებულია“.",
+    "ru": "Пожалуйста, дождитесь пока все файлы загрузятся, и нажмите «Готово», чтобы продолжить."
+  },
+  "something_went_wrong": {
+    "en": "Something went wrong while uploading your report. Here is the technical information:\r\n%s",
+    "hy": "Something went wrong while uploading your report. Here is the technical information:\r\n%s",
+    "ka": "Something went wrong while uploading your report. Here is the technical information:\r\n%s",
+    "ru": "В процессе загрузки вашего сообщения что-то пошло не так. Вот подробности:\r\n%s"
+  },
+  "media_required": {
+    "en": "You must send at least one photo or video of the location",
+    "hy": "You must send at least one photo or video of the location",
+    "ka": "You must send at least one photo or video of the location",
+    "ru": "Необходимо отправить хотя бы одно фото или видео места"
+  },
+  "report_place_for_urn": {
+    "en": "Place to install a trash can",
+    "hy": "Տեղ աղբամանի համար",
+    "ka": "სანაგვე ყუთის დაყენება",
+    "ru": "Место для урны"
+  },
+  "cancel_phrase": {
+    "en": "You have canceled the conversation. Press /report to start reporting again.",
+    "hy": "Դու չեղարկել ես զրույցը: Կրկին զեկուցելու համար սեղմիր /report",
+    "ka": "საუბარს ვწყვეტთ. გთხოვთ დააჭირეთ /report ღილაკს ახალი შეტყობინების გასაგზავნად.",
+    "ru": "Вы прервали разговор. Нажмите /report, чтобы начать заново."
+  },
+  "open_phrase": {
+    "en": "Hi! I am a bot that can help you report a littered area. Please choose your language. If you've chosen a language by mistake, press /reset",
+    "hy": "Ողջու՜յն! Ես բոտ եմ, որտեղ կարող ես զեկուցել աղբահանության կարիք ունեցող վայրի մասին: Խնդրում եm ընտրել լեզուն",
+    "ka": "გამარჯობათ. მე ვარ ბოტი, რომელსაც შეგიძლიათ გაუგზავნოთ შეტყობინება დანაგვიანებული ადგილის შესახებ. გთხოვთ აირჩიოთ სასურველი ენა.",
+    "ru": "Привет! Я бот, которому можно отправить сообщение о замусоренном месте. Пожалуйста, выберите язык общения. Если вы ошиблись с выбором, нажмите /reset"
+  },
+  "thanks_for_feedback": {
+    "en": "Thank you for the feedback. It has been recorded. We may reach out to you if we have any further questions or when we fix your issue. Cheers!",
+    "hy": "Thank you for the feedback. It has been recorded. We may reach out to you if we have any further questions or when we fix your issue. Cheers!",
+    "ka": "Thank you for the feedback. It has been recorded. We may reach out to you if we have any further questions or when we fix your issue. Cheers!",
+    "ru": "Thank you for the feedback. It has been recorded. We may reach out to you if we have any further questions or when we fix your issue. Cheers!"
+  },
+  "report_command": {
+    "en": "Submit a new report",
+    "hy": "Submit a new report",
+    "ka": "Submit a new report",
+    "ru": "Отправить отчет о загрязненном месте"
+  },
+  "feedback_command": {
+    "en": "Submit feedback about the bot",
+    "hy": "Submit feedback about the bot",
+    "ka": "Submit feedback about the bot",
+    "ru": "Оставить отзыв о работе бота"
+  },
+  "cancel_command": {
+    "en": "Cancel the current action",
+    "hy": "Cancel the current action",
+    "ka": "Cancel the current action",
+    "ru": "Отменить текущее действие"
+  },
+  "reset_command": {
+    "en": "Reset user preferences",
+    "hy": "Reset user preferences",
+    "ka": "Reset user preferences",
+    "ru": "Сбросить пользовательские настройки"
+  },
+  "dont_understand": {
+    "en": "I didn’t understand this message. Please try something different!",
+    "hy": "I didn’t understand this message. Please try something different!",
+    "ka": "I didn’t understand this message. Please try something different!",
+    "ru": "Я не понял это сообщение. Попробуйте написать что-нибудь другое!"
+  }
+}
