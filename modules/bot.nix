@@ -12,30 +12,23 @@
         type = loglevel;
         default = "INFO";
       };
-      trashDb = mkOption { type = notionDb; };
-      preferencesDb = mkOption {
-        type = nullOr notionDb;
-        default = null;
-      };
-      feedbackDb = mkOption {
-        type = nullOr notionDb;
-        default = null;
-      };
-      exceptionsDb = mkOption {
-        type = nullOr notionDb;
-        default = null;
-      };
       s3Bucket = mkOption { type = str; };
       s3BucketEndpoint = mkOption { type = str; };
       dataPathPrefix = mkOption {
         type = path;
         default = "/tmp";
       };
-      notionStaticPageUrl = mkOption { type = str; };
-      translationsDb = mkOption { type = notionDb; };
       languages = mkOption {
         type = nullOr (listOf str);
         default = null;
+      };
+
+      firebaseSDKKeyPath = mkOption {
+        type = path;
+      };
+
+      firebaseProjectId = mkOption {
+        type = str;
       };
 
       secretsFile = mkOption { type = path; };
@@ -48,20 +41,11 @@
         wantedBy = [ "multi-user.target" ];
         environment = {
           LOGLEVEL = loglevel;
-          TRASH_DB_ID = trashDb;
           S3_BUCKET = s3Bucket;
           S3_BUCKET_ENDPOINT = s3BucketEndpoint;
           DATA_PATH_PREFIX = dataPathPrefix;
-          TRANSLATIONS_DB_ID = translationsDb;
-          NOTION_STATIC_PAGE_URL = notionStaticPageUrl;
-        } // lib.optionalAttrs (!isNull preferencesDb) {
-          PREFERENCES_DB_ID = preferencesDb;
-        } // lib.optionalAttrs (!isNull languages) {
-          LANGUAGES = builtins.concatStringsSep "," languages;
-        } // lib.optionalAttrs (!isNull feedbackDb) {
-          FEEDBACK_DB_ID = feedbackDb;
-        } // lib.optionalAttrs (!isNull exceptionsDb) {
-          EXCEPTIONS_DB_ID = exceptionsDb;
+          FIREBASE_SERVICE_ACCOUNT_KEY_PATH = firebaseSDKKeyPath;
+          FIREBASE_PROJECT_ID = firebaseProjectId;
         };
         serviceConfig = {
           ExecStart = "${package}/bin/cleanups-telegram-bot";

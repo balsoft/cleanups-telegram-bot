@@ -49,7 +49,7 @@ S3_BUCKET_ENDPOINT = os.environ.get(
 
 
 LOGLEVEL = os.environ.get("LOGLEVEL", "INFO")
-
+TRANSLATIONS_YAML = os.environ.get("TRANSLATIONS_YAML", "translations.yaml")
 
 # Enable logging
 logging.basicConfig(
@@ -82,7 +82,7 @@ LANGUAGE, DESCRIPTION, CONTENT, LOCATION = range(4)
 
 REPORT, FEEDBACK = range(2)
 
-phrases = yaml.load(open("translations.yaml"), yaml.SafeLoader)
+phrases = yaml.load(open(TRANSLATIONS_YAML), yaml.SafeLoader)
 language_list = list(phrases["language_name"].keys())
 
 if "LANGUAGES" in os.environ:
@@ -135,7 +135,7 @@ def init(update: Update, context: CallbackContext):
     context.user_data["user_full_name"] = update.message.chat.full_name
     context.user_data["user_telegram_username"] = update.message.chat.username
     context.user_data["user_id"] = str(update.message.chat.id)
-    context.user_data["chat_date"] = str(update.me=1)ssage.date.strftime("%s"))
+    context.user_data["chat_date"] = str(update.message.date.strftime("%s"))
     context.user_data["photos"] = []
     context.user_data["videos"] = []
     context.user_data["thumbnail"] = None

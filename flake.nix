@@ -13,24 +13,25 @@
           requirements = builtins.readFile ./requirements.txt;
         };
 
-        bot = pkgs.writeShellScriptBin "cleanups-telegram-bot"
-          "exec ${python3}/bin/python3 ${./main.py}";
-        map = pkgs.writeShellScriptBin "cleanups-map"
-          "exec ${python3}/bin/python3 ${./map.py}";
-
+        bot = pkgs.writeShellScriptBin "cleanups-telegram-bot" ''
+          export TRANSLATIONS_YAML=${./translations.yaml}
+          export PATH="$PATH:${pkgs.lib.makeBinPath [ pkgs.ffmpeg ]}"
+          exec ${python3}/bin/python3 ${./main.py}
+        '';
       in {
         packages = {
-          inherit bot map;
+          inherit bot;
           default = bot;
         };
 
-        devShells.default =
-          pkgs.mkShell { buildInputs = [ python3 pkgs.python3.pkgs.pylsp-mypy pkgs.black pkgs.ffmpeg ]; };
+        devShells.default = pkgs.mkShell {
+          buildInputs =
+            [ python3 pkgs.python3.pkgs.pylsp-mypy pkgs.black pkgs.ffmpeg ];
+        };
 
         checks.formatting =
           pkgs.runCommand "check-formatting" { } "black --check ${./.}";
       }) // {
         nixosModules.bot = import ./modules/bot.nix;
-        nixosModules.map = import ./modules/map.nix;
       };
 }
