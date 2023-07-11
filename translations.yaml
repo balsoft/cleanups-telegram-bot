@@ -150,9 +150,9 @@
     "ru": "Сбросить пользовательские настройки"
   },
   "dont_understand": {
-    "en": "I didn’t understand this message. Please try something different!",
-    "hy": "I didn’t understand this message. Please try something different!",
-    "ka": "I didn’t understand this message. Please try something different!",
-    "ru": "Я не понял это сообщение. Попробуйте написать что-нибудь другое!"
+    "en": "I didn’t understand this message. Please try something different, for example /report",
+    "hy": "I didn’t understand this message. Please try something different, for example /report",
+    "ka": "I didn’t understand this message. Please try something different, for example /report",
+    "ru": "Я не понял это сообщение. Попробуйте написать что-нибудь другое, например /report"
   }
 }
